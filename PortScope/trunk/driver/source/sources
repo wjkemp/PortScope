@@ -1,0 +1,13 @@
+TARGETNAME=portscope
+TARGETTYPE=DRIVER
+
+MSC_WARNING_LEVEL= /W4 /WX
+
+TARGETLIBS=  $(DDK_LIB_PATH)\wdmsec.lib \
+             $(DDK_LIB_PATH)\rtlver.lib \
+             
+             
+SOURCES= psentry.c psdispatch.c pscontrol.c psfilter.c psbuffer.c
+
+
+C_DEFINES= $(C_DEFINES)  -DDEVICE_UPPER=1 -DIOCTL_INTERFACE=1

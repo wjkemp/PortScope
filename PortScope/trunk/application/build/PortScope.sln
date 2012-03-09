@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PortScope", "PortScope.vcproj", "{A5039CF7-EC35-464E-A9C9-76E1E65E7496}"
+	ProjectSection(ProjectDependencies) = postProject
+		{04FDFA25-A439-4631-B9EF-1F22D9889DD8} = {04FDFA25-A439-4631-B9EF-1F22D9889DD8}
+		{B816425F-DB5C-4DB3-9DDC-485579A289FC} = {B816425F-DB5C-4DB3-9DDC-485579A289FC}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ps_slip", "..\plugins\ps_slip\build\ps_slip.vcproj", "{B816425F-DB5C-4DB3-9DDC-485579A289FC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ps_filter", "..\plugins\ps_filter\build\ps_filter.vcproj", "{04FDFA25-A439-4631-B9EF-1F22D9889DD8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A5039CF7-EC35-464E-A9C9-76E1E65E7496}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A5039CF7-EC35-464E-A9C9-76E1E65E7496}.Debug|Win32.Build.0 = Debug|Win32
+		{A5039CF7-EC35-464E-A9C9-76E1E65E7496}.Release|Win32.ActiveCfg = Release|Win32
+		{A5039CF7-EC35-464E-A9C9-76E1E65E7496}.Release|Win32.Build.0 = Release|Win32
+		{B816425F-DB5C-4DB3-9DDC-485579A289FC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B816425F-DB5C-4DB3-9DDC-485579A289FC}.Debug|Win32.Build.0 = Debug|Win32
+		{B816425F-DB5C-4DB3-9DDC-485579A289FC}.Release|Win32.ActiveCfg = Release|Win32
+		{B816425F-DB5C-4DB3-9DDC-485579A289FC}.Release|Win32.Build.0 = Release|Win32
+		{04FDFA25-A439-4631-B9EF-1F22D9889DD8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{04FDFA25-A439-4631-B9EF-1F22D9889DD8}.Debug|Win32.Build.0 = Debug|Win32
+		{04FDFA25-A439-4631-B9EF-1F22D9889DD8}.Release|Win32.ActiveCfg = Release|Win32
+		{04FDFA25-A439-4631-B9EF-1F22D9889DD8}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
