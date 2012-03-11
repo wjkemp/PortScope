@@ -3,7 +3,7 @@
 
 #include <ntddk.h>
 #include "psbuffer.h"
-
+#include "rwengine.h"
 
 
 #define POOL_TAG   'liFT'
@@ -96,6 +96,10 @@ NTSTATUS FilterDeviceUsageNotificationCompletionRoutine(PDEVICE_OBJECT DeviceObj
 NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_STRING deviceName);
 
 
+ULONG PortScope_ReadTransmitData(PVOID context, PVOID buffer, ULONG length);
+ULONG PortScope_ReadReceiveData(PVOID context, PVOID buffer, ULONG length);
+ULONG PortScope_RwNullFunction(PVOID context, PVOID buffer, ULONG length);
+
 
 
 
@@ -157,7 +161,14 @@ typedef struct
     BUFFER ReadBuffer;
     unsigned char ReadBufferData[1024];
     KSPIN_LOCK ReadLock;
+
+    ULONG TransmitDataTag;
+    ULONG ReceiveDataTag;
+
+    RWENGINE TransmitDataEngine;
+    RWENGINE ReceiveDataEngine;
     
+
 } CONTROL_DEVICE_EXTENSION, *PCONTROL_DEVICE_EXTENSION;
 
 
@@ -165,44 +176,15 @@ typedef struct
 typedef struct
 {
     COMMON_DEVICE_DATA Common;
-    
-    //
-    // A back pointer to the device object.
-    //
-
-    PDEVICE_OBJECT  Self;
-
-    //
-    // The top of the stack before this filter was added.
-    //
-
-    PDEVICE_OBJECT  NextLowerDriver;
-
-    //
-    // current PnP state of the device
-    //
-
-    DEVICE_PNP_STATE  DevicePnPState;
-
-    //
-    // Remembers the previous pnp state
-    //
-
-    DEVICE_PNP_STATE    PreviousPnPState;
-
-    //
-    // Removelock to track IRPs so that device can be removed and
-    // the driver can be unloaded safely.
-    //
+    PDEVICE_OBJECT Self;
+    PDEVICE_OBJECT NextLowerDriver;
+    DEVICE_PNP_STATE DevicePnPState;
+    DEVICE_PNP_STATE PreviousPnPState;
     IO_REMOVE_LOCK RemoveLock;    
-
-
     PCONTROL_DEVICE_EXTENSION ControlDevice;
-
-
     ULONG IrpsDispatched;
     ULONG IrpsCompleted;
-    
+
 } FILTER_DEVICE_EXTENSION, *PFILTER_DEVICE_EXTENSION;
 
 

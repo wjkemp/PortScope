@@ -12,16 +12,34 @@
 
 
 
+
 /*---------------------------------------------------------------------------*/
 NTSTATUS PortScope_ControlCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     NTSTATUS status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION stack;
+    PCONTROL_DEVICE_EXTENSION deviceExtension;
+    UNICODE_STRING deviceName;
+
     PAGED_CODE();
     
-    UNREFERENCED_PARAMETER(DeviceObject);
         
     DBG0(("PortScope: ControlCreate\n"));
 
+
+    deviceExtension = (PCONTROL_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+    stack = IoGetCurrentIrpStackLocation(Irp);
+
+
+    // Check the device name
+    RtlInitUnicodeString(&deviceName, L"\\transmit");
+    if (RtlCompareUnicodeString(&stack->FileObject->FileName, &deviceName, TRUE) == 0) {
+        stack->FileObject->FsContext = &deviceExtension->TransmitDataTag;
+    } else {
+        stack->FileObject->FsContext = &deviceExtension->ReceiveDataTag;
+    }
+
+    // Complete the IRP
     Irp->IoStatus.Status = status;
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
@@ -64,23 +82,28 @@ NTSTATUS PortScope_ControlRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     deviceExtension = (PCONTROL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
 
+
+
+    /* Transmit Data read */
+    if (irpStack->FileObject->FsContext == &deviceExtension->TransmitDataTag) {
+
+        /* Dispatch to the transmit data engine */
+        status = RwEngine_DispatchRead(&deviceExtension->TransmitDataEngine, Irp);
+
+    /* Receive Data Read */
+    } else {
+
+        /* Dispatch to the receive data engine */
+        status = RwEngine_DispatchRead(&deviceExtension->ReceiveDataEngine, Irp);
+    }
+
+
+
     buffer = (PUCHAR)Irp->AssociatedIrp.SystemBuffer;
     length = irpStack->Parameters.Read.Length;
 
 
     /*
-    KeAcquireSpinLock(&deviceExtension->WriteLock, &irql);
-
-    if (length > deviceExtension->WriteBuffer.count) {
-        length = deviceExtension->WriteBuffer.count;
-    }
-
-
-    for (i = 0; i < length; ++i) {
-        buffer[i] = Buffer_Get(&deviceExtension->WriteBuffer);
-    }
-
-    KeReleaseSpinLock(&deviceExtension->WriteLock, irql);
 
     */
 
@@ -107,6 +130,67 @@ NTSTATUS PortScope_ControlRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
     return status;
+}
+
+
+
+/*---------------------------------------------------------------------------*/
+ULONG PortScope_ReadTransmitData(PVOID context, PVOID buffer, ULONG length)
+{
+    PCONTROL_DEVICE_EXTENSION deviceExtension = (PCONTROL_DEVICE_EXTENSION)context;
+    PUCHAR ptr = (PUCHAR)buffer;
+    KIRQL irql;
+    ULONG i;
+
+    KeAcquireSpinLock(&deviceExtension->WriteLock, &irql);
+
+    if (length > deviceExtension->WriteBuffer.count) {
+        length = deviceExtension->WriteBuffer.count;
+    }
+
+
+    for (i = 0; i < length; ++i) {
+        ptr[i] = Buffer_Get(&deviceExtension->WriteBuffer);
+    }
+
+    KeReleaseSpinLock(&deviceExtension->WriteLock, irql);
+
+    return length;
+}
+
+
+/*---------------------------------------------------------------------------*/
+ULONG PortScope_ReadReceiveData(PVOID context, PVOID buffer, ULONG length)
+{
+    PCONTROL_DEVICE_EXTENSION deviceExtension = (PCONTROL_DEVICE_EXTENSION)context;
+    PUCHAR ptr = (PUCHAR)buffer;
+    KIRQL irql;
+    ULONG i;
+
+    KeAcquireSpinLock(&deviceExtension->ReadLock, &irql);
+
+    if (length > deviceExtension->ReadBuffer.count) {
+        length = deviceExtension->ReadBuffer.count;
+    }
+
+    for (i = 0; i < length; ++i) {
+        ptr[i] = Buffer_Get(&deviceExtension->ReadBuffer);
+    }
+
+    KeReleaseSpinLock(&deviceExtension->ReadLock, irql);
+
+    return length;
+}
+
+
+/*---------------------------------------------------------------------------*/
+ULONG PortScope_RwNullFunction(PVOID context, PVOID buffer, ULONG length)
+{
+    UNREFERENCED_PARAMETER(context);
+    UNREFERENCED_PARAMETER(buffer);
+    UNREFERENCED_PARAMETER(length);
+
+    return 0;
 }
 
 
