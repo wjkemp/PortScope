@@ -74,16 +74,30 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath
         /* Create symbolic device link */
         IoCreateSymbolicLink(&usDosDeviceName, &usDriverName);
 
-        /* Initialize the device extension */
+        /* Initialize the control device extension */
         deviceExtension = (PCONTROL_DEVICE_EXTENSION)pDeviceObject->DeviceExtension;
         deviceExtension->Common.Type = DEVICE_TYPE_CONTROL;
 
+        /* Initialize the buffers */
         Buffer_Initialize(&deviceExtension->WriteBuffer, deviceExtension->WriteBufferData, sizeof(deviceExtension->WriteBufferData));
         KeInitializeSpinLock(&deviceExtension->WriteLock);
 
         Buffer_Initialize(&deviceExtension->ReadBuffer, deviceExtension->ReadBufferData, sizeof(deviceExtension->ReadBufferData));
         KeInitializeSpinLock(&deviceExtension->ReadLock);
 
+
+        /* Initialize the read/write engines */
+        RwEngine_Initialize(
+            &deviceExtension->TransmitDataEngine,
+            PortScope_RwNullFunction,
+            PortScope_ReadTransmitData,
+            deviceExtension);
+
+        RwEngine_Initialize(
+            &deviceExtension->ReceiveDataEngine,
+            PortScope_RwNullFunction,
+            PortScope_ReadReceiveData,
+            deviceExtension);
     }
 
 
