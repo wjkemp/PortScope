@@ -1,23 +1,51 @@
-/*******************************************************************************
-    psentry.c
-********************************************************************************/
-#include <wdm.h>
-#include "portscope.h"
-
- 
-
-/* 
- * These compiler directives tell the Operating System how to load the
- * driver into memory. The "INIT" section is discardable as you only
- * need the driver entry upon initialization, then it can be discarded.
+/*  psentry.c - Driver Entry Point
+ *
+ *  Copyright 2012 Willem Kemp.
+ *  All rights reserved.
+ *
+ *  This file is part of PortScope.
+ *
+ *  PortScope is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  PortScope is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with PortScope. If not, see http://www.gnu.org/licenses/.
  *
  */
+#include "psdispatch.h"
+#include "pscontrol.h"
+#include "psfilter.h"
 
 
-/*-- Function Prototypes -----------------------------------------------------*/
+
+/*---------------------------------------------------------------------------
+    Defines
+ ----------------------------------------------------------------------------*/
+DRIVER_INITIALIZE DriverEntry;
+DRIVER_UNLOAD PortScope_Unload;
 
 #pragma alloc_text(INIT, DriverEntry)
 #pragma alloc_text(PAGE, PortScope_Unload)
+
+
+/*---------------------------------------------------------------------------
+    Variables
+ ----------------------------------------------------------------------------*/ 
+
+
+/*---------------------------------------------------------------------------
+    Functions
+ ----------------------------------------------------------------------------*/
+NTSTATUS DriverEntry(PDRIVER_OBJECT  pDriverObject, PUNICODE_STRING  pRegistryPath); 
+VOID PortScope_Unload(PDRIVER_OBJECT  DriverObject);    
+
 
 
 /*----------------------------------------------------------------------------*/
@@ -76,33 +104,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath
 
         /* Initialize the control device extension */
         deviceExtension = (PCONTROL_DEVICE_EXTENSION)pDeviceObject->DeviceExtension;
-        deviceExtension->Common.Type = DEVICE_TYPE_CONTROL;
-        InitializeListHead(&deviceExtension->FilterDeviceList);
-
-        /* Initialize the buffers */
-        Buffer_Initialize(&deviceExtension->WriteBuffer, deviceExtension->WriteBufferData, sizeof(deviceExtension->WriteBufferData));
-        Buffer_Initialize(&deviceExtension->ReadBuffer, deviceExtension->ReadBufferData, sizeof(deviceExtension->ReadBufferData));
-
-
-        /* Initialize the read/write engines */
-        RwEngine_Initialize(
-            &deviceExtension->TransmitDataEngine,
-            PortScope_RwNullFunction,
-            PortScope_ReadTransmitData,
-            deviceExtension);
-
-        RwEngine_Initialize(
-            &deviceExtension->ReceiveDataEngine,
-            PortScope_RwNullFunction,
-            PortScope_ReadReceiveData,
-            deviceExtension);
-
-        RwEngine_SetReadTimeout(&deviceExtension->TransmitDataEngine, 50, 0);
-        RwEngine_SetReadTimeout(&deviceExtension->ReceiveDataEngine, 50, 0);
-
-
-        RwEngine_Enable(&deviceExtension->TransmitDataEngine);
-        RwEngine_Enable(&deviceExtension->ReceiveDataEngine);
+        PortScope_ControlInitializeDeviceExtension(deviceExtension);
     }
 
 

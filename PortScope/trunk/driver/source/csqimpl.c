@@ -1,43 +1,49 @@
-/******************************************************************************
-    Copyright (c) 2005 Xstream Flow (Pty) Ltd.
-
-    Provides an implementation for cancel-safe IRP queues.
-    See the sample that comes with the DDK.
-        
- ******************************************************************************/
+/*  csqimpl.c - Cancel-Safe Queue Implementation
+ *
+ *  Copyright 2012 Willem Kemp.
+ *  All rights reserved.
+ *
+ *  This file is part of PortScope.
+ *
+ *  PortScope is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  PortScope is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with PortScope. If not, see http://www.gnu.org/licenses/.
+ *
+ */
 #include "csqimpl.h"
 
 
 /*---------------------------------------------------------------------------
- .  Local function definitions
- ----------------------------------------------------------------------------*/
-VOID CsqInsertIrp (IN PIO_CSQ Csq, IN PIRP Irp);
-VOID CsqRemoveIrp(IN PIO_CSQ Csq, IN PIRP Irp);
-PIRP CsqPeekNextIrp(IN PIO_CSQ Csq,IN PIRP Irp, IN PVOID PeekContext);
-VOID CsqAcquireLock(IN PIO_CSQ Csq, OUT PKIRQL Irql);
-VOID CsqReleaseLock(IN PIO_CSQ Csq, IN KIRQL Irql);
-VOID CsqCompleteCanceledIrp(IN PIO_CSQ pCsq, IN PIRP Irp);
-
-/*---------------------------------------------------------------------------
- .  Module Definitions
+    Defines
  ----------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------
- .  Module Variables
+    Variables
  ----------------------------------------------------------------------------*/ 
  
-
- /*---------------------------------------------------------------------------
- .  Module Interface Functions
+/*---------------------------------------------------------------------------
+    Functions
  ----------------------------------------------------------------------------*/
+static VOID CsqInsertIrp (IN PIO_CSQ Csq, IN PIRP Irp);
+static VOID CsqRemoveIrp(IN PIO_CSQ Csq, IN PIRP Irp);
+static PIRP CsqPeekNextIrp(IN PIO_CSQ Csq,IN PIRP Irp, IN PVOID PeekContext);
+static VOID CsqAcquireLock(IN PIO_CSQ Csq, OUT PKIRQL Irql);
+static VOID CsqReleaseLock(IN PIO_CSQ Csq, IN KIRQL Irql);
+static VOID CsqCompleteCanceledIrp(IN PIO_CSQ pCsq, IN PIRP Irp);
 
 
-/*-----------------------------------------------------------------------------
- . CsqInitialize
- ----------------------------------------------------------------------------*/
-VOID CsqInitialize(PCSQ csq, CsqCancelCallback callback, PVOID context) {
-
-
+/*---------------------------------------------------------------------------*/
+VOID CsqInitialize(PCSQ csq, CsqCancelCallback callback, PVOID context)
+{
     /* Initialize the Spin Lock */
     KeInitializeSpinLock(&csq->lock);
 
@@ -59,11 +65,9 @@ VOID CsqInitialize(PCSQ csq, CsqCancelCallback callback, PVOID context) {
 }
 
 
-/*-----------------------------------------------------------------------------
- . CsqInsertIrp
- ----------------------------------------------------------------------------*/
-VOID CsqInsertIrp(IN PIO_CSQ Csq, IN PIRP Irp) {
-
+/*---------------------------------------------------------------------------*/
+static VOID CsqInsertIrp(IN PIO_CSQ Csq, IN PIRP Irp)
+{
     PCSQ csq;
 
     csq = CONTAINING_RECORD(Csq, CSQ, csq);
@@ -71,10 +75,9 @@ VOID CsqInsertIrp(IN PIO_CSQ Csq, IN PIRP Irp) {
 }
 
 
-/*-----------------------------------------------------------------------------
- . CsqRemoveIrp
- ----------------------------------------------------------------------------*/
-VOID CsqRemoveIrp(IN PIO_CSQ Csq, IN PIRP Irp) {
+/*---------------------------------------------------------------------------*/
+static VOID CsqRemoveIrp(IN PIO_CSQ Csq, IN PIRP Irp)
+{
     PCSQ csq;
 
     csq = CONTAINING_RECORD(Csq, CSQ, csq);    
@@ -82,10 +85,9 @@ VOID CsqRemoveIrp(IN PIO_CSQ Csq, IN PIRP Irp) {
 }
 
 
-/*-----------------------------------------------------------------------------
- . CsqPeekNextIrp
- ----------------------------------------------------------------------------*/
-PIRP CsqPeekNextIrp(IN PIO_CSQ Csq, IN PIRP Irp, IN PVOID PeekContext) {
+/*---------------------------------------------------------------------------*/
+static PIRP CsqPeekNextIrp(IN PIO_CSQ Csq, IN PIRP Irp, IN PVOID PeekContext)
+{
     PCSQ csq;
     PIRP                   nextIrp = NULL;
     PLIST_ENTRY            nextEntry;
@@ -135,10 +137,9 @@ PIRP CsqPeekNextIrp(IN PIO_CSQ Csq, IN PIRP Irp, IN PVOID PeekContext) {
 }
 
 
-/*-----------------------------------------------------------------------------
- . CsqAcquireLock
- ----------------------------------------------------------------------------*/
-VOID CsqAcquireLock(IN PIO_CSQ Csq, OUT PKIRQL Irql) {
+/*---------------------------------------------------------------------------*/
+static VOID CsqAcquireLock(IN PIO_CSQ Csq, OUT PKIRQL Irql)
+{
     PCSQ csq;
 
     csq = CONTAINING_RECORD(Csq, CSQ, csq);    
@@ -146,10 +147,9 @@ VOID CsqAcquireLock(IN PIO_CSQ Csq, OUT PKIRQL Irql) {
 }
 
 
-/*-----------------------------------------------------------------------------
- . CsqReleaseLock
- ----------------------------------------------------------------------------*/
-VOID CsqReleaseLock(IN PIO_CSQ Csq, IN KIRQL Irql) {
+/*---------------------------------------------------------------------------*/
+static VOID CsqReleaseLock(IN PIO_CSQ Csq, IN KIRQL Irql)
+{
     PCSQ csq;
 
     csq = CONTAINING_RECORD(Csq, CSQ, csq);        
@@ -157,11 +157,9 @@ VOID CsqReleaseLock(IN PIO_CSQ Csq, IN KIRQL Irql) {
 }
 
 
-/*-----------------------------------------------------------------------------
- . CsqCompleteCanceledIrp
- ----------------------------------------------------------------------------*/
-VOID CsqCompleteCanceledIrp(IN PIO_CSQ pCsq, IN PIRP Irp) {
-
+/*---------------------------------------------------------------------------*/
+static VOID CsqCompleteCanceledIrp(IN PIO_CSQ pCsq, IN PIRP Irp)
+{
     PCSQ csq;
 
     csq = CONTAINING_RECORD(pCsq, CSQ, csq);
@@ -178,6 +176,3 @@ VOID CsqCompleteCanceledIrp(IN PIO_CSQ pCsq, IN PIRP Irp) {
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 }
-
-
-

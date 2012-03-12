@@ -1,6 +1,31 @@
-#include <wdm.h>
-#include "portscope.h"
+/*  psfilter.c - Filter Dispatch Functions
+ *
+ *  Copyright 2012 Willem Kemp.
+ *  All rights reserved.
+ *
+ *  This file is part of PortScope.
+ *
+ *  PortScope is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  PortScope is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with PortScope. If not, see http://www.gnu.org/licenses/.
+ *
+ */
+#include "psfilter.h"
 
+
+
+/*---------------------------------------------------------------------------
+    Defines
+ ----------------------------------------------------------------------------*/
 #pragma alloc_text(PAGE, PortScope_FilterCreate) 
 #pragma alloc_text(PAGE, PortScope_FilterClose) 
 #pragma alloc_text(PAGE, PortScope_FilterRead) 
@@ -9,6 +34,24 @@
 #pragma alloc_text(PAGE, PortScope_FilterPnp)
 #pragma alloc_text(PAGE, PortScope_FilterPower)
 #pragma alloc_text(PAGE, PortScope_FilterUnknown)
+
+IO_COMPLETION_ROUTINE PortScope_FilterReadComplete;
+IO_COMPLETION_ROUTINE FilterStartCompletionRoutine;
+IO_COMPLETION_ROUTINE FilterDeviceUsageNotificationCompletionRoutine;
+
+
+/*---------------------------------------------------------------------------
+    Variables
+ ----------------------------------------------------------------------------*/ 
+ 
+
+/*---------------------------------------------------------------------------
+    Functions
+ ----------------------------------------------------------------------------*/
+NTSTATUS PortScope_FilterReadComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context);
+NTSTATUS FilterStartCompletionRoutine(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context);
+NTSTATUS FilterDeviceUsageNotificationCompletionRoutine(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context);
+
 
 
 /*---------------------------------------------------------------------------*/
@@ -480,6 +523,8 @@ NTSTATUS PortScope_FilterPower(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PFILTER_DEVICE_EXTENSION deviceExtension;
     NTSTATUS status;
+
+    PAGED_CODE();
     
     deviceExtension = (PFILTER_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     status = IoAcquireRemoveLock (&deviceExtension->RemoveLock, Irp);

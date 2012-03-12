@@ -105,11 +105,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\source\pscommon.h"
+				>
+			</File>
+			<File
 				RelativePath="..\source\pscontrol.c"
 				>
 			</File>
 			<File
+				RelativePath="..\source\pscontrol.h"
+				>
+			</File>
+			<File
 				RelativePath="..\source\psdispatch.c"
+				>
+			</File>
+			<File
+				RelativePath="..\source\psdispatch.h"
 				>
 			</File>
 			<File
@@ -118,6 +130,10 @@
 			</File>
 			<File
 				RelativePath="..\source\psfilter.c"
+				>
+			</File>
+			<File
+				RelativePath="..\source\psfilter.h"
 				>
 			</File>
 			<File
