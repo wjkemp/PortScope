@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include <QDir>
 #include <QPluginLoader>
+#include <QMdiSubWindow>
 
 
 //-----------------------------------------------------------------------------
@@ -12,9 +13,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     _captureEngine(0)
 {
 
-    // Create the widget stack
-    _displayWidgetStack = new QStackedWidget();
-    setCentralWidget(_displayWidgetStack);
+    // Create MDI Area
+    _mdiArea = new QMdiArea();
+    setCentralWidget(_mdiArea);
 
 
     // Create the protocol stack
@@ -37,6 +38,13 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 
     _actStopCapture = new QAction("Stop Capture", this);
 
+    _actTileSubWindows = new QAction("Tile", this);
+    connect(_actTileSubWindows, SIGNAL(triggered()), _mdiArea, SLOT(tileSubWindows()));
+
+    _actCascadeSubWindows = new QAction("Cascade", this);
+    connect(_actCascadeSubWindows, SIGNAL(triggered()), _mdiArea, SLOT(cascadeSubWindows()));
+
+
 
     // Create the menu bar
     _menuBar = new QMenuBar();
@@ -49,6 +57,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mCapture->addAction(_actStartCapture);
     mCapture->addAction(_actStopCapture);
     _menuBar->addMenu(mCapture);
+
+    QMenu* mWindow = new QMenu("Window");
+    mWindow->addAction(_actTileSubWindows);
+    mWindow->addAction(_actCascadeSubWindows);
+    _menuBar->addMenu(mWindow);
+
     setMenuBar(_menuBar);
 }
 
@@ -81,14 +95,19 @@ void MainWindow::openConfiguration()
         QList<QWidget*> displayWidgets(_protocolStack->getDisplayWidgets());
         QWidget* displayWidget;
         foreach(displayWidget, displayWidgets) {
-            _displayWidgetStack->addWidget(displayWidget);
+            QMdiSubWindow* subWindow = new QMdiSubWindow();
+            subWindow->setWidget(displayWidget);
+            _mdiArea->addSubWindow(subWindow);
+            _mdiSubWindows[displayWidget] = subWindow;
+            subWindow->show();
         }
+
+        _mdiArea->tileSubWindows();
 
         connect(
             _protocolStackView,
             SIGNAL(displayWidgetChanged(QWidget*)),
-            _displayWidgetStack, 
-            SLOT(setCurrentWidget(QWidget*)));
+            SLOT(showWidget(QWidget*)));
 
         _isConfigured = true;
 
@@ -122,4 +141,15 @@ void MainWindow::stopCapture()
     if (_isConfigured && _isCapturing) {
         _captureEngine->stop();
     }
+}
+
+
+//-----------------------------------------------------------------------------
+void MainWindow::showWidget(QWidget* widget)
+{
+    if (widget->isVisible()) {
+    } else {
+        widget->show();
+    }
+    _mdiArea->setActiveSubWindow(_mdiSubWindows[widget]);
 }

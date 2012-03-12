@@ -3,7 +3,7 @@
 
 #include <QtGui/QMainWindow>
 #include <QDockWidget>
-#include <QStackedWidget>
+#include <QMdiArea>
 #include <QMenuBar>
 #include "protocolstack/protocolstack.h"
 #include "protocolstack/protocolstackview.h"
@@ -25,6 +25,7 @@ protected slots:
     void closeConfiguration();
     void startCapture();
     void stopCapture();
+    void showWidget(QWidget* widget);
 
 private:
   void loadPlugins();
@@ -34,7 +35,8 @@ private:
     // Static objects
     ProtocolStackView* _protocolStackView;
     QDockWidget* _protocolStackDockWidget;
-    QStackedWidget* _displayWidgetStack;
+    QMdiArea* _mdiArea;
+    QMap<QWidget*, QMdiSubWindow*> _mdiSubWindows;
 
     // Configuration-created objects
     bool _isConfigured;
@@ -51,6 +53,10 @@ private:
     QAction* _actCloseConfiguration;
     QAction* _actStartCapture;
     QAction* _actStopCapture;
+
+    QAction* _actTileSubWindows;
+    QAction* _actCascadeSubWindows;
+
 };
 
 #endif // MAINWINDOW_H

@@ -15,7 +15,7 @@ public:
     PS_slip();
     ~PS_slip();
     QString displayText() const;
-    ProtocolAnalyzer* createProtocolAnalyzer();
+    ProtocolAnalyzer* createProtocolAnalyzer(const QString& name, const QString& parameters);
 
 };
 

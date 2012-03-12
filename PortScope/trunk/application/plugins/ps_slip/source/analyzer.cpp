@@ -2,12 +2,14 @@
 
 
 //-----------------------------------------------------------------------------
-Analyzer::Analyzer() :
-    SlipParser(1024)
+Analyzer::Analyzer(const QString& name) :
+    SlipParser(1024),
+    _name(name)
 {
     _displayModel = new DisplayModel();
     _displayView = new DisplayView();
     _displayView->setModel(_displayModel);
+    _displayView->setWindowTitle(name);
 }
 
 

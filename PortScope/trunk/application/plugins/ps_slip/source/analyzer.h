@@ -12,7 +12,7 @@ class Analyzer : public ProtocolAnalyzer, public SlipParser
 {
 
 public:
-    Analyzer();
+    Analyzer(const QString& name);
     ~Analyzer();
     QWidget* displayWidget();
     void addChild(ProtocolAnalyzer* child);
@@ -22,6 +22,7 @@ protected:
     void frameReceived(const void* data, size_t length);
 
 private:
+    QString _name;
     QList<ProtocolAnalyzer*> _children;
     DisplayModel* _displayModel;
     DisplayView* _displayView;

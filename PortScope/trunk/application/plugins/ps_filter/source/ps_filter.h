@@ -15,7 +15,7 @@ public:
     PS_filter();
     ~PS_filter();
     QString displayText() const;
-    ProtocolAnalyzer* createProtocolAnalyzer();
+    ProtocolAnalyzer* createProtocolAnalyzer(const QString& name, const QString& parameters);
 
 };
 

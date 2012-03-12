@@ -22,9 +22,13 @@ QString PS_filter::displayText() const
 }
 
 //-----------------------------------------------------------------------------
-ProtocolAnalyzer* PS_filter::createProtocolAnalyzer()
+ProtocolAnalyzer* PS_filter::createProtocolAnalyzer(const QString& name, const QString& parameters)
 {
-    return new Analyzer();
+    if (parameters == "TX") {
+        return new Analyzer(name, ProtocolAnalyzer::TransmitData);
+    } else {
+        return new Analyzer(name, ProtocolAnalyzer::ReceiveData);
+    }
 }
 
 

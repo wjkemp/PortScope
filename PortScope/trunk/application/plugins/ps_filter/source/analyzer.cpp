@@ -4,10 +4,13 @@
 
 
 //-----------------------------------------------------------------------------
-Analyzer::Analyzer() :
+Analyzer::Analyzer(const QString& name, Flags filterMask) :
+    _name(name),
+    _filterMask(filterMask),
     _bytesProcessed(0)
 {
     _display = new Display(this);
+    _display->setWindowTitle(name);
 }
 
 
@@ -35,12 +38,14 @@ QWidget* Analyzer::displayWidget()
 //-----------------------------------------------------------------------------
 void Analyzer::processData(const void* data, size_t length, Flags flags)
 {
-    _bytesProcessed += length;
 
+    if (_filterMask & flags) {
+        _bytesProcessed += length;
 
-    // Forward
-    ProtocolAnalyzer* child;
-    foreach (child, _children) {
-        child->processData(data, length, flags);
+        // Forward
+        ProtocolAnalyzer* child;
+        foreach (child, _children) {
+            child->processData(data, length, flags);
+        }
     }
 }
