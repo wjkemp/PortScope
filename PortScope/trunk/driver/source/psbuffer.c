@@ -8,50 +8,117 @@
 //----------------------------------------------------------------------------
 void Buffer_Initialize(BUFFER* obj, unsigned char* buffer, ULONG length)
 {
-	obj->buffer = buffer;
+	obj->head = buffer;
+    obj->tail = (buffer + length);
+	obj->read = obj->head;
+	obj->write = obj->head;
 	obj->length = length;
-	obj->readPtr = 0;
-	obj->writePtr = 0;
 	obj->count = 0;
+
+    KeInitializeSpinLock(&obj->lock);
+
 }
 
 
 //----------------------------------------------------------------------------
 void Buffer_Clear(BUFFER* obj)
 {
-	obj->readPtr = 0;
-	obj->writePtr = 0;
+	obj->read = obj->head;
+	obj->write = obj->head;
 	obj->count = 0;	
 }
 
 
 //----------------------------------------------------------------------------
-void Buffer_Put(BUFFER* obj, unsigned char value)
+ULONG Buffer_Put(BUFFER* obj, const PUCHAR data, ULONG length)
 {
-	if (obj->count < obj->length) {
-		obj->buffer[obj->writePtr] = value;
-		obj->count++;
-		obj->writePtr++;
-		if (obj->writePtr == obj->length) {
-			obj->writePtr = 0;
-		}
-	}	
+    ULONG headCount;
+    KIRQL irql;
+
+
+    KeAcquireSpinLock(&obj->lock, &irql);
+
+    /* Limit the length to the available size */
+    if (length > (obj->length - obj->count)) {
+        length = (obj->length - obj->count);
+    }
+
+    if (length) {
+        headCount = (ULONG)(obj->tail - obj->write);
+
+        /* Wrap around */
+        if (headCount < length) {
+            ULONG tailCount;
+
+            tailCount = (length - headCount);
+            RtlCopyMemory(obj->write, data, headCount);
+            RtlCopyMemory(obj->head, (data + headCount), tailCount);
+            obj->write = (obj->head + tailCount);
+
+        /* Enough to hold entire write */
+        } else if (headCount > length) {
+            RtlCopyMemory(obj->write, data, length);
+            obj->write += length;
+
+        /* Wrap around with no tail */
+        } else {
+            RtlCopyMemory(obj->write, data, length);
+            obj->write = obj->head;
+        }
+
+        obj->count += length;
+    }
+
+    KeReleaseSpinLock(&obj->lock, irql);
+
+    return length;
 }
 
 
+
 //----------------------------------------------------------------------------
-unsigned char Buffer_Get(BUFFER* obj)
+ULONG Buffer_Get(BUFFER* obj, PUCHAR data, ULONG length)
 {
-	unsigned char value = 0;
-	
-	if (obj->count > 0) {
-		value = obj->buffer[obj->readPtr];
-		obj->count--;
-		obj->readPtr++;
-		if (obj->readPtr == obj->length) {
-			obj->readPtr = 0;
-		}
-	}	
-	
-	return value;	
+    ULONG headCount;
+    KIRQL irql;
+
+
+    KeAcquireSpinLock(&obj->lock, &irql);
+
+    /* Limit the length to the available data */
+    if (length > obj->count) {
+        length = obj->count;
+    }
+
+    if (length) {
+        headCount = (ULONG)(obj->tail - obj->read);
+
+        /* Wrap around */
+        if (headCount < length) {
+            ULONG tailCount;
+
+            tailCount = (length - headCount);
+            RtlCopyMemory(data, obj->read, headCount);
+            RtlCopyMemory((data + headCount), obj->head, tailCount);
+            obj->read = (obj->head + tailCount);
+
+        /* Enough to hold entire write */
+        } else if (headCount > length) {
+            RtlCopyMemory(data, obj->read, length);
+            obj->read += length;
+
+        /* Wrap around with no tail */
+        } else {
+            RtlCopyMemory(data, obj->read, length);
+            obj->read = obj->head;
+        }
+
+        obj->count -= length;
+    }
+
+    KeReleaseSpinLock(&obj->lock, irql);
+
+    return length;
+
+
 }
