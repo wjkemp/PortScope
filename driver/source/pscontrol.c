@@ -1,4 +1,6 @@
+#include <ntifs.h>
 #include <wdm.h>
+#include <ntddk.h>
 #include "portscope.h"
 
 #pragma alloc_text(PAGE, PortScope_ControlCreate) 
@@ -34,8 +36,11 @@ NTSTATUS PortScope_ControlCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     // Check the device name
     RtlInitUnicodeString(&deviceName, L"\\transmit");
     if (RtlCompareUnicodeString(&stack->FileObject->FileName, &deviceName, TRUE) == 0) {
+        DBG1(("PortScope: Opening Control Handle for Transmit Data\n"));
         stack->FileObject->FsContext = &deviceExtension->TransmitDataTag;
+
     } else {
+        DBG1(("PortScope: Opening Control Handle for Receive Data\n"));
         stack->FileObject->FsContext = &deviceExtension->ReceiveDataTag;
     }
 
@@ -70,10 +75,6 @@ NTSTATUS PortScope_ControlRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     NTSTATUS status = STATUS_SUCCESS;
     PIO_STACK_LOCATION irpStack;
     PCONTROL_DEVICE_EXTENSION deviceExtension;
-    KIRQL irql;
-    UCHAR* buffer;
-    ULONG length;
-    ULONG i;
     
     PAGED_CODE();
         
@@ -83,51 +84,20 @@ NTSTATUS PortScope_ControlRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     irpStack = IoGetCurrentIrpStackLocation(Irp);
 
 
-
     /* Transmit Data read */
     if (irpStack->FileObject->FsContext == &deviceExtension->TransmitDataTag) {
 
         /* Dispatch to the transmit data engine */
+        DBG1(("PortScope: Read Transmit Data\n"));
         status = RwEngine_DispatchRead(&deviceExtension->TransmitDataEngine, Irp);
 
     /* Receive Data Read */
     } else {
 
         /* Dispatch to the receive data engine */
+        DBG1(("PortScope: Read Receive Data\n"));
         status = RwEngine_DispatchRead(&deviceExtension->ReceiveDataEngine, Irp);
     }
-
-
-
-    buffer = (PUCHAR)Irp->AssociatedIrp.SystemBuffer;
-    length = irpStack->Parameters.Read.Length;
-
-
-    /*
-
-    */
-
-    
-    KeAcquireSpinLock(&deviceExtension->ReadLock, &irql);
-
-    if (length > deviceExtension->ReadBuffer.count) {
-        length = deviceExtension->ReadBuffer.count;
-    }
-
-
-    for (i = 0; i < length; ++i) {
-        buffer[i] = Buffer_Get(&deviceExtension->ReadBuffer);
-    }
-
-    KeReleaseSpinLock(&deviceExtension->ReadLock, irql);
-
-    
-
-
-
-    Irp->IoStatus.Status = status;
-    Irp->IoStatus.Information = length;
-    IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
     return status;
 }
@@ -138,23 +108,8 @@ NTSTATUS PortScope_ControlRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 ULONG PortScope_ReadTransmitData(PVOID context, PVOID buffer, ULONG length)
 {
     PCONTROL_DEVICE_EXTENSION deviceExtension = (PCONTROL_DEVICE_EXTENSION)context;
-    PUCHAR ptr = (PUCHAR)buffer;
-    KIRQL irql;
-    ULONG i;
 
-    KeAcquireSpinLock(&deviceExtension->WriteLock, &irql);
-
-    if (length > deviceExtension->WriteBuffer.count) {
-        length = deviceExtension->WriteBuffer.count;
-    }
-
-
-    for (i = 0; i < length; ++i) {
-        ptr[i] = Buffer_Get(&deviceExtension->WriteBuffer);
-    }
-
-    KeReleaseSpinLock(&deviceExtension->WriteLock, irql);
-
+    length = Buffer_Get(&deviceExtension->WriteBuffer, buffer, length);
     return length;
 }
 
@@ -163,22 +118,8 @@ ULONG PortScope_ReadTransmitData(PVOID context, PVOID buffer, ULONG length)
 ULONG PortScope_ReadReceiveData(PVOID context, PVOID buffer, ULONG length)
 {
     PCONTROL_DEVICE_EXTENSION deviceExtension = (PCONTROL_DEVICE_EXTENSION)context;
-    PUCHAR ptr = (PUCHAR)buffer;
-    KIRQL irql;
-    ULONG i;
 
-    KeAcquireSpinLock(&deviceExtension->ReadLock, &irql);
-
-    if (length > deviceExtension->ReadBuffer.count) {
-        length = deviceExtension->ReadBuffer.count;
-    }
-
-    for (i = 0; i < length; ++i) {
-        ptr[i] = Buffer_Get(&deviceExtension->ReadBuffer);
-    }
-
-    KeReleaseSpinLock(&deviceExtension->ReadLock, irql);
-
+    length = Buffer_Get(&deviceExtension->ReadBuffer, buffer, length);
     return length;
 }
 
@@ -215,6 +156,7 @@ NTSTATUS PortScope_ControlWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 NTSTATUS PortScope_ControlIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     NTSTATUS status = STATUS_SUCCESS;
+    PCONTROL_DEVICE_EXTENSION deviceExtension = (PCONTROL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION  irpStack;
 
     PAGED_CODE();
@@ -233,9 +175,39 @@ NTSTATUS PortScope_ControlIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         /* Open Port */
         case IOCTL_OPEN_PORT: {
             UNICODE_STRING deviceName;
-            
-            RtlInitUnicodeString(&deviceName, L"\\DosDevices\\COM14");                      
-            PortScope_InstallFilterDriver(DeviceObject, &deviceName);
+            PLIST_ENTRY listEntry;
+            PFILTER_DEVICE_EXTENSION filterEntry = 0;
+            PCWSTR buffer = (PCWSTR)Irp->AssociatedIrp.SystemBuffer;
+            ULONG length = irpStack->Parameters.DeviceIoControl.InputBufferLength;
+            DbgPrint("PortScope: Length: %d\n", length);
+
+
+            /* Initialize the device string */            
+            RtlInitUnicodeString(&deviceName, buffer);
+            DbgPrint("PortScope: Opening %wZ\n", &deviceName);
+
+            /* Search the Filter Device List for an installed filter */
+            listEntry = deviceExtension->FilterDeviceList.Flink;
+            while (listEntry != &deviceExtension->FilterDeviceList) {
+                PFILTER_DEVICE_EXTENSION filterDeviceExtension = 
+                    CONTAINING_RECORD(listEntry, FILTER_DEVICE_EXTENSION, ListEntry);
+
+                DbgPrint("PortScope: Checking %wZ\n", &filterDeviceExtension->DeviceName);
+                if (RtlCompareUnicodeString(&deviceName, &filterDeviceExtension->DeviceName, TRUE) == 0) {
+                    filterEntry = filterDeviceExtension;
+                    break;
+                }
+
+                listEntry = listEntry->Flink;
+            }
+
+            if (filterEntry) {
+                DBG1(("PortScope: Filter Device Object is already installed\n"));
+
+            } else {
+                DBG1(("PortScope: Installing filter driver\n"));
+                PortScope_InstallFilterDriver(DeviceObject, &deviceName);
+            }
 
         } break;
     }
@@ -304,7 +276,7 @@ NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_ST
     PFILE_OBJECT fileObject;
     PDEVICE_OBJECT remoteDeviceObject = NULL;
 
-    DBG0(("PortScope: Installing filter driver\n"));
+    DBG1(("PortScope: Installing filter driver\n"));
     
     /* Initialize the object attributes structure */
     InitializeObjectAttributes(
@@ -352,7 +324,7 @@ NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_ST
         ZwClose(fileHandle);
 
     } else {
-        DBG0(("PortScope: Could not open device file\n"));
+        DBG1(("PortScope: Could not open device file\n"));
     }
                       
                       
@@ -384,6 +356,8 @@ NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_ST
             /* Successful attachment */
             if (NULL != filterDeviceExtension->NextLowerDriver) {
 
+                DBG1(("PortScope: Filter driver was successfully installed\n"));
+
                 /* Initialize the filter device object */
                 filterDeviceObject->Flags |= filterDeviceExtension->NextLowerDriver->Flags & (DO_BUFFERED_IO | DO_DIRECT_IO | DO_POWER_PAGABLE);
                 filterDeviceObject->DeviceType = filterDeviceExtension->NextLowerDriver->DeviceType;
@@ -391,6 +365,11 @@ NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_ST
                 filterDeviceExtension->Self = filterDeviceObject;
                 filterDeviceExtension->IrpsDispatched = 0;
                 filterDeviceExtension->IrpsCompleted = 0;
+
+                /* Store the device name */
+                RtlCreateUnicodeString(
+                    &filterDeviceExtension->DeviceName,
+                    deviceName->Buffer);
 
                 /* Initialize the remove lock */
                 IoInitializeRemoveLock(
@@ -409,6 +388,8 @@ NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_ST
                 /* Back pointer to the control device extension */
                 filterDeviceExtension->ControlDevice = controlDeviceExtension;
 
+                /* Append the filter to the list */
+                InsertTailList(&controlDeviceExtension->FilterDeviceList, &filterDeviceExtension->ListEntry);
                 
             
             /* Failed to attach */

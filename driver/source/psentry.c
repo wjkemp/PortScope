@@ -32,7 +32,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath
     UNREFERENCED_PARAMETER(pRegistryPath);
 
     
-    DBG0(("PortScope: DriverEntry\n"));
+    DBG1(("PortScope: DriverEntry\n"));
 
     RtlInitUnicodeString(&usDriverName, L"\\Device\\PortScope");
     RtlInitUnicodeString(&usDosDeviceName, L"\\DosDevices\\PortScope"); 
@@ -77,13 +77,11 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath
         /* Initialize the control device extension */
         deviceExtension = (PCONTROL_DEVICE_EXTENSION)pDeviceObject->DeviceExtension;
         deviceExtension->Common.Type = DEVICE_TYPE_CONTROL;
+        InitializeListHead(&deviceExtension->FilterDeviceList);
 
         /* Initialize the buffers */
         Buffer_Initialize(&deviceExtension->WriteBuffer, deviceExtension->WriteBufferData, sizeof(deviceExtension->WriteBufferData));
-        KeInitializeSpinLock(&deviceExtension->WriteLock);
-
         Buffer_Initialize(&deviceExtension->ReadBuffer, deviceExtension->ReadBufferData, sizeof(deviceExtension->ReadBufferData));
-        KeInitializeSpinLock(&deviceExtension->ReadLock);
 
 
         /* Initialize the read/write engines */
@@ -98,6 +96,13 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath
             PortScope_RwNullFunction,
             PortScope_ReadReceiveData,
             deviceExtension);
+
+        RwEngine_SetReadTimeout(&deviceExtension->TransmitDataEngine, 50, 0);
+        RwEngine_SetReadTimeout(&deviceExtension->ReceiveDataEngine, 50, 0);
+
+
+        RwEngine_Enable(&deviceExtension->TransmitDataEngine);
+        RwEngine_Enable(&deviceExtension->ReceiveDataEngine);
     }
 
 

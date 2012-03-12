@@ -73,11 +73,9 @@ NTSTATUS PortScope_FilterReadComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVO
 {
     NTSTATUS status = STATUS_SUCCESS;
     PFILTER_DEVICE_EXTENSION deviceExtension = (PFILTER_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    KIRQL irql;
     PIO_STACK_LOCATION irpStack;
     UCHAR* buffer;
     ULONG length;
-    ULONG i;
 
     UNREFERENCED_PARAMETER(Context);
 
@@ -95,14 +93,7 @@ NTSTATUS PortScope_FilterReadComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVO
         deviceExtension->IrpsDispatched,
         deviceExtension->IrpsCompleted);
 
-    KeAcquireSpinLock(&deviceExtension->ControlDevice->ReadLock, &irql);
-
-    for (i = 0; i < length; ++i) {
-        Buffer_Put(&deviceExtension->ControlDevice->ReadBuffer, buffer[i]);
-    }
-
-    KeReleaseSpinLock(&deviceExtension->ControlDevice->ReadLock, irql);
-
+    Buffer_Put(&deviceExtension->ControlDevice->ReadBuffer, buffer, length);
 
     if (Irp->PendingReturned) {
         DbgPrint("PortScope: PendingReturned\n");
@@ -161,10 +152,8 @@ NTSTATUS PortScope_FilterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     NTSTATUS status = STATUS_SUCCESS;
     PFILTER_DEVICE_EXTENSION deviceExtension = (PFILTER_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION irpStack;
-    KIRQL irql;
     UCHAR* buffer;
     ULONG length;
-    ULONG i;
 
     PAGED_CODE();
     
@@ -187,14 +176,7 @@ NTSTATUS PortScope_FilterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     DbgPrint("PortScope: FilterWrite of %d bytes\n", length);
 
-    KeAcquireSpinLock(&deviceExtension->ControlDevice->WriteLock, &irql);
-
-    for (i = 0; i < length; ++i) {
-        Buffer_Put(&deviceExtension->ControlDevice->WriteBuffer, buffer[i]);
-    }
-
-    KeReleaseSpinLock(&deviceExtension->ControlDevice->WriteLock, irql);
-
+    Buffer_Put(&deviceExtension->ControlDevice->WriteBuffer, buffer, length);
 
     /* Forward the IRP */
     IoSkipCurrentIrpStackLocation(Irp);

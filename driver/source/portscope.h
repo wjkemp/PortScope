@@ -8,17 +8,20 @@
 
 #define POOL_TAG   'liFT'
 
-/*
-#define DBG0(_x_) DbgPrint(_x_)
+
+#define DBG0(_x_) /* DbgPrint(_x_) */
 #define DBG1(_x_) DbgPrint(_x_)
 #define DBG2(_x_) DbgPrint(_x_)
 #define DBG3(_x_) DbgPrint(_x_)
-*/
 
+
+
+/*
 #define DBG0(_x_)
 #define DBG1(_x_)
 #define DBG2(_x_)
 #define DBG3(_x_)
+*/
 
 
 DRIVER_INITIALIZE DriverEntry;
@@ -156,18 +159,17 @@ typedef struct
     COMMON_DEVICE_DATA Common;
     BUFFER WriteBuffer;
     unsigned char WriteBufferData[1024];
-    KSPIN_LOCK WriteLock;
 
     BUFFER ReadBuffer;
     unsigned char ReadBufferData[1024];
-    KSPIN_LOCK ReadLock;
 
     ULONG TransmitDataTag;
     ULONG ReceiveDataTag;
 
     RWENGINE TransmitDataEngine;
     RWENGINE ReceiveDataEngine;
-    
+
+    LIST_ENTRY FilterDeviceList;   
 
 } CONTROL_DEVICE_EXTENSION, *PCONTROL_DEVICE_EXTENSION;
 
@@ -184,6 +186,8 @@ typedef struct
     PCONTROL_DEVICE_EXTENSION ControlDevice;
     ULONG IrpsDispatched;
     ULONG IrpsCompleted;
+    UNICODE_STRING DeviceName;
+    LIST_ENTRY ListEntry;   
 
 } FILTER_DEVICE_EXTENSION, *PFILTER_DEVICE_EXTENSION;
 
@@ -192,6 +196,6 @@ typedef struct
 /*-----------------------------------------------------------------------------
     IO Control Codes
  ------------------------------------------------------------------------------*/
-#define IOCTL_OPEN_PORT         CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_IN_DIRECT, FILE_WRITE_DATA)
+#define IOCTL_OPEN_PORT         CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_BUFFERED, FILE_WRITE_DATA)
 
 #endif

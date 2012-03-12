@@ -17,11 +17,15 @@
 /** Buffer Object */
 typedef struct
 {
-	unsigned char* buffer;
-	ULONG length;
-	ULONG readPtr;
-	ULONG writePtr;
+	PUCHAR head;
+    PUCHAR tail;
+    PUCHAR read;
+    PUCHAR write;
+
 	ULONG count;
+	ULONG length;
+
+    KSPIN_LOCK lock;
 	
 } BUFFER, *PBUFFER;
 
@@ -52,7 +56,7 @@ void Buffer_Clear(BUFFER* obj);
  * @param obj The buffer object
  * @param value The byte to insert
  */
-void Buffer_Put(BUFFER* obj, unsigned char value);
+ULONG Buffer_Put(BUFFER* obj, const PUCHAR data, ULONG length);
 
 
 /**
@@ -60,7 +64,7 @@ void Buffer_Put(BUFFER* obj, unsigned char value);
  * @param obj The buffer object
  * @return The byte that was extracted
  */
-unsigned char Buffer_Get(BUFFER* obj);
+ULONG Buffer_Get(BUFFER* obj, PUCHAR data, ULONG length);
 
 
 #endif
