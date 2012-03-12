@@ -1,5 +1,5 @@
 #include "captureengine.h"
-#include "capturedevice.h"
+#include <libps.h>
 
 
 //-----------------------------------------------------------------------------
@@ -39,24 +39,26 @@ void CaptureEngine::run()
 
     // Create the capture interface
     const size_t captureBufferSize = 2048;
-    CaptureDevice* device = new CaptureDevice("\\\\.\\PortScope");
-    //CaptureDevice* device = new CaptureDevice("\\\\.\\COM14");
+    LIBPS_HANDLE device = LIBPS_Initialize(captureBufferSize);
     unsigned char* captureBuffer = new unsigned char[captureBufferSize];
 
 
     do {
 
+        int flags = 0;
+        LIBPS_WaitForData(device, &flags);
 
-        // Read from the capture interface
-        size_t bytesCaptured = device->captureData(captureBuffer, captureBufferSize);
-
-        // Process
-        if (bytesCaptured) {
-            _protocolStack->root()->analyzer()->processData(captureBuffer, bytesCaptured, ProtocolAnalyzer::TransmitData);
+        if (flags & LIBPS_TRANSMIT_DATA_AVAILABLE) {
+            size_t length = captureBufferSize;
+            LIBPS_ReadTransmitData(device, captureBuffer, &length);
+            _protocolStack->root()->analyzer()->processData(captureBuffer, length, ProtocolAnalyzer::TransmitData);
         }
 
-        usleep(10);
-
+        if (flags & LIBPS_RECEIVE_DATA_AVAILABLE) {
+            size_t length = captureBufferSize;
+            LIBPS_ReadReceiveData(device, captureBuffer, &length);
+            _protocolStack->root()->analyzer()->processData(captureBuffer, length, ProtocolAnalyzer::ReceiveData);
+        }
 
     } while (1);
 

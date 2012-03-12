@@ -11,7 +11,7 @@ class Analyzer : public ProtocolAnalyzer
 {
 
 public:
-    Analyzer();
+    Analyzer(const QString& name, Flags filterMask);
     ~Analyzer();
     QWidget* displayWidget();
     void addChild(ProtocolAnalyzer* child);
@@ -20,6 +20,8 @@ public:
     unsigned long bytesProcessed() const { return _bytesProcessed; }
 
 private:
+    QString _name;
+    Flags _filterMask;
     QList<ProtocolAnalyzer*> _children;
     Display* _display;
     unsigned long _bytesProcessed;

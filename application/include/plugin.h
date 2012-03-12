@@ -11,7 +11,7 @@ class Plugin
 public:
     virtual ~Plugin() {}
     virtual QString displayText() const = 0;
-    virtual ProtocolAnalyzer* createProtocolAnalyzer() = 0;
+    virtual ProtocolAnalyzer* createProtocolAnalyzer(const QString& name, const QString& parameters) = 0;
 
 };
 

@@ -22,9 +22,9 @@ QString PS_slip::displayText() const
 }
 
 //-----------------------------------------------------------------------------
-ProtocolAnalyzer* PS_slip::createProtocolAnalyzer()
+ProtocolAnalyzer* PS_slip::createProtocolAnalyzer(const QString& name, const QString& parameters)
 {
-    return new Analyzer();
+    return new Analyzer(name);
 }
 
 

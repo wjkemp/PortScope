@@ -1,8 +1,8 @@
 <ProtocolStack>
-	<Protocol name="Transmit Data" plugin="ps_filter.dll">
+	<Protocol name="Transmit Data" plugin="ps_filter.dll" parameters="TX" >
 		<Protocol name="SLIP" plugin="ps_slip.dll" />
 	</Protocol>
-	<Protocol name="Receive Data" plugin="ps_filter.dll">
+	<Protocol name="Receive Data" plugin="ps_filter.dll" parameters="RX" >
 		<Protocol name="SLIP" plugin="ps_slip.dll" />
 	</Protocol>
 </ProtocolStack>

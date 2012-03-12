@@ -78,9 +78,10 @@ ProtocolStackItem* ProtocolStack::createStackItem(const QDomElement& e, Protocol
                 // Get the attributes
                 QString name(e.attribute("name", "unnamed"));
                 QString type(plugin->displayText());
+                QString parameters(e.attribute("parameters"));
 
                 // Create the stack item
-                item = new ProtocolStackItem(name, type, plugin->createProtocolAnalyzer(), parent);
+                item = new ProtocolStackItem(name, type, plugin->createProtocolAnalyzer(name, parameters), parent);
             }
         }
     }
