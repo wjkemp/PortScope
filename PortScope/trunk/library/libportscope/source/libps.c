@@ -2,6 +2,9 @@
 #include <windows.h>
 
 
+#define IOCTL_OPEN_PORT         CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_BUFFERED, FILE_WRITE_DATA)
+
+
 /*---------------------------------------------------------------------------*/
 typedef struct
 {
@@ -22,7 +25,9 @@ typedef struct
 
     int flags;
 
+
 } LIBPS;
+
 
 
 /*---------------------------------------------------------------------------*/
@@ -40,9 +45,9 @@ LIBPS_HANDLE LIBPS_Initialize(size_t bufferSize)
 
         /* Open handles to the driver */
         obj->transmitDataHandle = CreateFile(
-            L"\\\\.\\PortScope\transmit",
+            L"\\\\.\\PortScope\\transmit",
             (GENERIC_READ | GENERIC_WRITE),
-            (FILE_SHARE_READ | FILE_SHARE_WRITE),
+            0,
             0,
             OPEN_EXISTING,
             FILE_FLAG_OVERLAPPED,
@@ -50,14 +55,27 @@ LIBPS_HANDLE LIBPS_Initialize(size_t bufferSize)
             );
 
         obj->receiveDataHandle = CreateFile(
-            L"\\\\.\\PortScope\receive",
+            L"\\\\.\\PortScope\\receive",
             (GENERIC_READ | GENERIC_WRITE),
-            (FILE_SHARE_READ | FILE_SHARE_WRITE),
+            0,
             0,
             OPEN_EXISTING,
             FILE_FLAG_OVERLAPPED,
             NULL
             );
+
+        {            
+            DWORD bytesTransferred = 0;
+            DeviceIoControl(
+                obj->transmitDataHandle,
+                IOCTL_OPEN_PORT,
+                L"\\DosDevices\\COM15",
+                50,
+                0,
+                0,
+                &bytesTransferred,
+                0);
+        }
 
 
         /* Create the signaling events */
@@ -73,6 +91,10 @@ LIBPS_HANDLE LIBPS_Initialize(size_t bufferSize)
             FALSE,
             0);
 
+        /* Create the buffers */
+        obj->bufferSize = bufferSize;
+        obj->transmitDataBuffer = malloc(bufferSize);
+        obj->receiveDataBuffer = malloc(bufferSize);
 
         /* Create the overlapped structures */
         ZeroMemory(&obj->transmitDataTransfer, sizeof(OVERLAPPED));
@@ -81,9 +103,10 @@ LIBPS_HANDLE LIBPS_Initialize(size_t bufferSize)
         obj->transmitDataTransfer.hEvent = obj->transmitDataEvent;
         obj->receiveDataTransfer.hEvent = obj->receiveDataEvent;
 
-
+        obj->flags = 0;
         LIBPS_IssueTransmitDataRead(obj);
         LIBPS_IssueReceiveDataRead(obj);
+
 
     }
 
@@ -99,38 +122,67 @@ LIBPS_RESULT LIBPS_WaitForData(LIBPS_HANDLE handle, int* flags)
     DWORD waitResult;
 
 
-    handles[0] = obj->transmitDataEvent;
-    handles[1] = obj->receiveDataEvent;
+    if (obj->flags) {
+
+    } else {
+
+        handles[0] = obj->transmitDataEvent;
+        handles[1] = obj->receiveDataEvent;
 
 
-    waitResult = WaitForMultipleObjects(
-        2,
-        handles,
-        FALSE,
-        INFINITE);
+        waitResult = WaitForMultipleObjects(
+            2,
+            handles,
+            FALSE,
+            INFINITE);
 
-    switch (waitResult) {
+        switch (waitResult) {
 
-        /* Transmit Event */
-        case WAIT_OBJECT_0: {
-            obj->flags |= LIBPS_TRANSMIT_DATA_AVAILABLE;
+            /* Transmit Event */
+            case WAIT_OBJECT_0: {
+                DWORD bytesTransferred = 0;
+                GetOverlappedResult(
+                    obj->transmitDataHandle,
+                    &obj->transmitDataTransfer,
+                    &bytesTransferred,
+                    FALSE);
 
-        } break;
+                if (bytesTransferred > 0) {
+                    obj->flags = LIBPS_TRANSMIT_DATA_AVAILABLE;
+                } else {
+                    LIBPS_IssueTransmitDataRead(obj);
+                }
 
-        /* Receive Event */
-        case (WAIT_OBJECT_0 + 1): {
-            obj->flags |= LIBPS_RECEIVE_DATA_AVAILABLE;
+            } break;
 
-        } break;
+            /* Receive Event */
+            case (WAIT_OBJECT_0 + 1): {
+                DWORD bytesTransferred = 0;
+                GetOverlappedResult(
+                    obj->receiveDataHandle,
+                    &obj->receiveDataTransfer,
+                    &bytesTransferred,
+                    FALSE);
 
-        case WAIT_TIMEOUT: {
+                if (bytesTransferred > 0) {
+                    obj->flags = LIBPS_RECEIVE_DATA_AVAILABLE;
+                } else {
+                    LIBPS_IssueReceiveDataRead(obj);
+                }
 
-        } break;
+            } break;
 
-        case WAIT_FAILED: {
+            case WAIT_TIMEOUT: {
 
-        } break;
+            } break;
+
+            case WAIT_FAILED: {
+
+            } break;
+        }
     }
+
+    *flags = obj->flags;
 
     return 0;
 }
@@ -141,10 +193,20 @@ LIBPS_RESULT LIBPS_ReadTransmitData(LIBPS_HANDLE handle, void* data, size_t* len
 {
     LIBPS* obj = (LIBPS*)handle;
 
-    if (obj->flags & LIBPS_TRANSMIT_DATA_AVAILABLE) {
+    if (obj->flags == LIBPS_TRANSMIT_DATA_AVAILABLE) {
 
+        DWORD bytesTransferred = 0;
+        GetOverlappedResult(
+            obj->transmitDataHandle,
+            &obj->transmitDataTransfer,
+            &bytesTransferred,
+            FALSE);
+        
 
-        obj->flags &= ~LIBPS_TRANSMIT_DATA_AVAILABLE;
+        memcpy(data, obj->transmitDataBuffer, bytesTransferred);
+        *length = bytesTransferred;
+
+        obj->flags = 0;
         LIBPS_IssueTransmitDataRead(obj);
     }
 
@@ -157,11 +219,21 @@ LIBPS_RESULT LIBPS_ReadReceiveData(LIBPS_HANDLE handle, void* data, size_t* leng
 {
     LIBPS* obj = (LIBPS*)handle;
 
-    if (obj->flags & LIBPS_RECEIVE_DATA_AVAILABLE) {
+    if (obj->flags == LIBPS_RECEIVE_DATA_AVAILABLE) {
 
+        DWORD bytesTransferred = 0;
+        GetOverlappedResult(
+            obj->receiveDataHandle,
+            &obj->receiveDataTransfer,
+            &bytesTransferred,
+            FALSE);
+        
 
-        obj->flags &= ~LIBPS_RECEIVE_DATA_AVAILABLE;
-        LIBPS_IssueTransmitDataRead(obj);
+        memcpy(data, obj->receiveDataBuffer, bytesTransferred);
+        *length = bytesTransferred;
+
+        obj->flags = 0;
+        LIBPS_IssueReceiveDataRead(obj);
     }
 
     return 0;
