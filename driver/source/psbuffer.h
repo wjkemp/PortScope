@@ -1,20 +1,33 @@
-/******************************************************************************/
-/** @file buffer.h
- *  @brief Circular Byte Buffer
- */   
-/******************************************************************************/
+/*  psbuffer.h - Circular Buffer
+ *
+ *  Copyright 2012 Willem Kemp.
+ *  All rights reserved.
+ *
+ *  This file is part of PortScope.
+ *
+ *  PortScope is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  PortScope is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with PortScope. If not, see http://www.gnu.org/licenses/.
+ *
+ */
 #ifndef __PSBUFFER_H__
 #define __PSBUFFER_H__
-
-#include <ntddk.h>
 
 
 /*------------------------------------------------------------------------------
     Module Definitions
  -------------------------------------------------------------------------------*/
 
-
-/** Buffer Object */
+/* Buffer Object */
 typedef struct
 {
 	PUCHAR head;
@@ -33,37 +46,9 @@ typedef struct
 /*------------------------------------------------------------------------------
     Module Interface
  -------------------------------------------------------------------------------*/
-
-
-/**
- * @brief Initializes the buffer
- * @param obj The buffer object
- * @param buffer A pointer to a byte array
- * @param length The size of the byte array
- */
 void Buffer_Initialize(BUFFER* obj, unsigned char* buffer, ULONG length);
-
- 
-/**
- * @brief Clears the buffer
- * @param obj The buffer object
- */
 void Buffer_Clear(BUFFER* obj);
-
-
-/**
- * @brief Inserts a byte into the buffer
- * @param obj The buffer object
- * @param value The byte to insert
- */
 ULONG Buffer_Put(BUFFER* obj, const PUCHAR data, ULONG length);
-
-
-/**
- * @brief Extracts a byte from the buffer
- * @param obj The buffer object
- * @return The byte that was extracted
- */
 ULONG Buffer_Get(BUFFER* obj, PUCHAR data, ULONG length);
 
 

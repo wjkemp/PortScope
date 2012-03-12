@@ -1,8 +1,34 @@
+/*  pscontrol.c - Control Device Implementation
+ *
+ *  Copyright 2012 Willem Kemp.
+ *  All rights reserved.
+ *
+ *  This file is part of PortScope.
+ *
+ *  PortScope is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  PortScope is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with PortScope. If not, see http://www.gnu.org/licenses/.
+ *
+ */
 #include <ntifs.h>
-#include <wdm.h>
-#include <ntddk.h>
 #include "portscope.h"
+#include "pscontrol.h"
+#include "psfilter.h"
 
+
+
+/*---------------------------------------------------------------------------
+    Defines
+ ----------------------------------------------------------------------------*/
 #pragma alloc_text(PAGE, PortScope_ControlCreate) 
 #pragma alloc_text(PAGE, PortScope_ControlClose) 
 #pragma alloc_text(PAGE, PortScope_ControlRead) 
@@ -13,6 +39,64 @@
 #pragma alloc_text(PAGE, PortScope_ControlUnknown)
 
 
+/*---------------------------------------------------------------------------
+    Variables
+ ----------------------------------------------------------------------------*/ 
+
+
+/*---------------------------------------------------------------------------
+    Functions
+ ----------------------------------------------------------------------------*/
+static ULONG PortScope_ControlReadTransmitData(PVOID context, PVOID buffer, ULONG length);
+static ULONG PortScope_ControlReadReceiveData(PVOID context, PVOID buffer, ULONG length);
+static ULONG PortScope_ControlNullFunction(PVOID context, PVOID buffer, ULONG length);
+
+
+/*---------------------------------------------------------------------------*/
+NTSTATUS PortScope_ControlInitializeDeviceExtension(PCONTROL_DEVICE_EXTENSION deviceExtension)
+{
+    NTSTATUS status = STATUS_SUCCESS;
+
+    /* Set the type */
+    deviceExtension->Common.Type = DEVICE_TYPE_CONTROL;
+
+    /* Initialize the Filter Device List */
+    InitializeListHead(&deviceExtension->FilterDeviceList);
+
+    /* Initialize the buffers */
+    Buffer_Initialize(&deviceExtension->WriteBuffer, deviceExtension->WriteBufferData, sizeof(deviceExtension->WriteBufferData));
+    Buffer_Initialize(&deviceExtension->ReadBuffer, deviceExtension->ReadBufferData, sizeof(deviceExtension->ReadBufferData));
+
+    /* Initialize the read/write engines */
+    RwEngine_Initialize(
+        &deviceExtension->TransmitDataEngine,
+        PortScope_ControlNullFunction,
+        PortScope_ControlReadTransmitData,
+        deviceExtension);
+
+    RwEngine_Initialize(
+        &deviceExtension->ReceiveDataEngine,
+        PortScope_ControlNullFunction,
+        PortScope_ControlReadReceiveData,
+        deviceExtension);
+
+    /* Set the timeouts */
+    RwEngine_SetReadTimeout(&deviceExtension->TransmitDataEngine, 50, 0);
+    RwEngine_SetReadTimeout(&deviceExtension->ReceiveDataEngine, 50, 0);
+
+    /* Enable the read/write engines */
+    RwEngine_Enable(&deviceExtension->TransmitDataEngine);
+    RwEngine_Enable(&deviceExtension->ReceiveDataEngine);
+
+    return status;
+}
+
+
+/*---------------------------------------------------------------------------*/
+VOID PortScope_ControlDestroyDeviceExtension(PCONTROL_DEVICE_EXTENSION deviceExtension)
+{
+    UNREFERENCED_PARAMETER(deviceExtension);
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -105,7 +189,7 @@ NTSTATUS PortScope_ControlRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 
 /*---------------------------------------------------------------------------*/
-ULONG PortScope_ReadTransmitData(PVOID context, PVOID buffer, ULONG length)
+static ULONG PortScope_ControlReadTransmitData(PVOID context, PVOID buffer, ULONG length)
 {
     PCONTROL_DEVICE_EXTENSION deviceExtension = (PCONTROL_DEVICE_EXTENSION)context;
 
@@ -115,7 +199,7 @@ ULONG PortScope_ReadTransmitData(PVOID context, PVOID buffer, ULONG length)
 
 
 /*---------------------------------------------------------------------------*/
-ULONG PortScope_ReadReceiveData(PVOID context, PVOID buffer, ULONG length)
+static ULONG PortScope_ControlReadReceiveData(PVOID context, PVOID buffer, ULONG length)
 {
     PCONTROL_DEVICE_EXTENSION deviceExtension = (PCONTROL_DEVICE_EXTENSION)context;
 
@@ -125,13 +209,13 @@ ULONG PortScope_ReadReceiveData(PVOID context, PVOID buffer, ULONG length)
 
 
 /*---------------------------------------------------------------------------*/
-ULONG PortScope_RwNullFunction(PVOID context, PVOID buffer, ULONG length)
+static ULONG PortScope_ControlNullFunction(PVOID context, PVOID buffer, ULONG length)
 {
     UNREFERENCED_PARAMETER(context);
     UNREFERENCED_PARAMETER(buffer);
     UNREFERENCED_PARAMETER(length);
 
-    return 0;
+    return length;
 }
 
 
@@ -374,7 +458,7 @@ NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_ST
                 /* Initialize the remove lock */
                 IoInitializeRemoveLock(
                     &filterDeviceExtension->RemoveLock, 
-                    POOL_TAG,
+                    'ps..',
                     1,
                     100);
             

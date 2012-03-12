@@ -1,36 +1,55 @@
-/******************************************************************************
-    Copyright (c) 2007 Xstream Flow (Pty) Ltd.
- ******************************************************************************/
+/*  rwengine.c - Read-Write Engine
+ *
+ *  Copyright 2012 Willem Kemp.
+ *  All rights reserved.
+ *
+ *  This file is part of PortScope.
+ *
+ *  PortScope is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  PortScope is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with PortScope. If not, see http://www.gnu.org/licenses/.
+ *
+ */
 #include "rwengine.h"
 
-/*-----------------------------------------------------------------------------
- . Private Definitions
- -----------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- . Module Variables
- -----------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- . Private Function Definitions
- -----------------------------------------------------------------------------*/
-static VOID RwEngine_ReadDataAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2);
-static VOID RwEngine_ReadTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2);
+/*---------------------------------------------------------------------------
+    Defines
+ ----------------------------------------------------------------------------*/
+KDEFERRED_ROUTINE RwEngine_ReadDataAvailableDPC;
+KDEFERRED_ROUTINE RwEngine_ReadTimeoutDPC;
+KDEFERRED_ROUTINE RwEngine_WriteBufferAvailableDPC;
+KDEFERRED_ROUTINE RwEngine_WriteTimeoutDPC;
+
+
+/*---------------------------------------------------------------------------
+    Variables
+ ----------------------------------------------------------------------------*/ 
+ 
+/*---------------------------------------------------------------------------
+    Functions
+ ----------------------------------------------------------------------------*/
+VOID RwEngine_ReadDataAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2);
+VOID RwEngine_ReadTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2);
 static VOID RwEngine_OnCurrentReadCancelled(PVOID context, PIRP Irp);
 static VOID RwEngine_EnqueueAvailableReadIrps(PRWENGINE rwengine);
 static VOID RwEngine_StartReadTimeoutTimer(PRWENGINE rwengine);
 
-
-static VOID RwEngine_WriteBufferAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2);
-static VOID RwEngine_WriteTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2);
+VOID RwEngine_WriteBufferAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2);
+VOID RwEngine_WriteTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2);
 static VOID RwEngine_OnCurrentWriteCancelled(PVOID context, PIRP Irp);
 static VOID RwEngine_EnqueueAvailableWriteIrps(PRWENGINE rwengine);
 static VOID RwEngine_StartWriteTimeoutTimer(PRWENGINE rwengine);
-
-
-/*-----------------------------------------------------------------------------
- . Module Implementation
- -----------------------------------------------------------------------------*/
 
 
 
@@ -231,7 +250,6 @@ NTSTATUS RwEngine_DispatchRead(PRWENGINE rwengine, PIRP Irp)
     PIO_STACK_LOCATION stack;
     KIRQL oldirql;
     ULONG bytesRead;
-    PAGED_CODE();
 
 
     /* Get the current stack location */
@@ -322,8 +340,7 @@ NTSTATUS RwEngine_DispatchRead(PRWENGINE rwengine, PIRP Irp)
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
-static VOID RwEngine_ReadDataAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
+VOID RwEngine_ReadDataAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
 {
     PIRP pendingIrp;
     PRWENGINE rwengine;
@@ -392,8 +409,7 @@ static VOID RwEngine_ReadDataAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, 
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
-static VOID RwEngine_ReadTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
+VOID RwEngine_ReadTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
 {
     PIRP pendingIrp;
     PRWENGINE rwengine;
@@ -443,7 +459,6 @@ static VOID RwEngine_ReadTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID 
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
 static VOID RwEngine_OnCurrentReadCancelled(PVOID context, PIRP Irp)
 {
     KIRQL oldirql;
@@ -473,7 +488,6 @@ static VOID RwEngine_OnCurrentReadCancelled(PVOID context, PIRP Irp)
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
 static VOID RwEngine_EnqueueAvailableReadIrps(PRWENGINE rwengine)
 {
     PIRP nextIrp;
@@ -535,7 +549,6 @@ static VOID RwEngine_EnqueueAvailableReadIrps(PRWENGINE rwengine)
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
 static VOID RwEngine_StartReadTimeoutTimer(PRWENGINE rwengine)
 {
     LARGE_INTEGER timeout;
@@ -559,14 +572,12 @@ static VOID RwEngine_StartReadTimeoutTimer(PRWENGINE rwengine)
 
 
 /*----------------------------------------------------------------------------*/
-#pragma PAGEDCODE
 NTSTATUS RwEngine_DispatchWrite(PRWENGINE rwengine, PIRP Irp)
 {
     PIO_STACK_LOCATION stack;
     KIRQL oldirql;
     NTSTATUS status;
     ULONG bytesWritten;
-    PAGED_CODE();
 
 
     /* Get the current stack location */
@@ -662,8 +673,7 @@ NTSTATUS RwEngine_DispatchWrite(PRWENGINE rwengine, PIRP Irp)
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
-static VOID RwEngine_WriteBufferAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
+VOID RwEngine_WriteBufferAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
 {
     PIRP pendingIrp;
     PRWENGINE rwengine;
@@ -735,8 +745,7 @@ static VOID RwEngine_WriteBufferAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
-static VOID RwEngine_WriteTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
+VOID RwEngine_WriteTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
 {
     PIRP pendingIrp;
     PRWENGINE rwengine;
@@ -787,7 +796,6 @@ static VOID RwEngine_WriteTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID
 }
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
 static VOID RwEngine_OnCurrentWriteCancelled(PVOID context, PIRP Irp)
 {
     KIRQL oldirql;
@@ -817,7 +825,6 @@ static VOID RwEngine_OnCurrentWriteCancelled(PVOID context, PIRP Irp)
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
 static VOID RwEngine_EnqueueAvailableWriteIrps(PRWENGINE rwengine)
 {
     PIRP nextIrp;
@@ -879,7 +886,6 @@ static VOID RwEngine_EnqueueAvailableWriteIrps(PRWENGINE rwengine)
 
 
 /*----------------------------------------------------------------------------*/
-#pragma LOCKEDCODE
 static VOID RwEngine_StartWriteTimeoutTimer(PRWENGINE rwengine)
 {
     LARGE_INTEGER timeout;

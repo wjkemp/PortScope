@@ -1,4 +1,4 @@
-/*  csqimpl.h - Cancel-Safe Queue Implementation
+/*  psfilter.h - Filter Dispatch Functions
  *
  *  Copyright 2012 Willem Kemp.
  *  All rights reserved.
@@ -19,36 +19,46 @@
  *  along with PortScope. If not, see http://www.gnu.org/licenses/.
  *
  */
-#ifndef __CSQIMPL_H__
-#define __CSQIMPL_H__
+#ifndef __PSFILTER_H__
+#define __PSFILTER_H__
 
-#include <wdm.h>
-#include <csq.h>
+#include "pscommon.h"
+#include "pscontrol.h"
 
 
 /*-----------------------------------------------------------------------------
     Module Definitions
  -----------------------------------------------------------------------------*/
 
-typedef VOID (*CsqCancelCallback)(PVOID, PIRP);
 
+typedef struct
+{
+    COMMON_DEVICE_DATA Common;
+    PDEVICE_OBJECT Self;
+    PDEVICE_OBJECT NextLowerDriver;
+    DEVICE_PNP_STATE DevicePnPState;
+    DEVICE_PNP_STATE PreviousPnPState;
+    IO_REMOVE_LOCK RemoveLock;    
+    PCONTROL_DEVICE_EXTENSION ControlDevice;
+    ULONG IrpsDispatched;
+    ULONG IrpsCompleted;
+    UNICODE_STRING DeviceName;
+    LIST_ENTRY ListEntry;   
 
-typedef struct _CSQ {
-
-    IO_CSQ csq;   
-    KSPIN_LOCK lock;
-    LIST_ENTRY queue;
-    PVOID callbackContext;
-    CsqCancelCallback callback;
-
-
-} CSQ, *PCSQ;
+} FILTER_DEVICE_EXTENSION, *PFILTER_DEVICE_EXTENSION;
 
 
 /*-----------------------------------------------------------------------------
     Module Interface
  -----------------------------------------------------------------------------*/
-VOID CsqInitialize(PCSQ csq, CsqCancelCallback callback, PVOID context);
+NTSTATUS PortScope_FilterCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS PortScope_FilterClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS PortScope_FilterRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS PortScope_FilterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS PortScope_FilterIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS PortScope_FilterPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS PortScope_FilterPower(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS PortScope_FilterUnknown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 
 #endif
