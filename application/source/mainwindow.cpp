@@ -2,6 +2,8 @@
 #include <QDir>
 #include <QPluginLoader>
 #include <QMdiSubWindow>
+#include <QMessageBox>
+#include "captureengine/captureengineconfigurationdialog.h"
 
 
 //-----------------------------------------------------------------------------
@@ -91,6 +93,11 @@ void MainWindow::openConfiguration()
         _captureEngine = new CaptureEngine(_protocolStack);
         _protocolStackView->setProtocolStack(_protocolStack);
 
+        // Connect capture engine signals
+        connect(_captureEngine, SIGNAL(started()), SLOT(captureStarted()));
+        connect(_captureEngine, SIGNAL(stopped()), SLOT(captureStopped()));
+        connect(_captureEngine, SIGNAL(error(const QString&)), SLOT(captureError(const QString&)));
+
         // Add display widgets to the widget stack
         QList<QWidget*> displayWidgets(_protocolStack->getDisplayWidgets());
         QWidget* displayWidget;
@@ -128,8 +135,11 @@ void MainWindow::closeConfiguration()
 void MainWindow::startCapture()
 {
     if (_isConfigured && !_isCapturing) {
-        CaptureEngineConfiguration config;
-        _captureEngine->start(config);
+
+        CaptureEngineConfigurationDialog dialog;
+        if (dialog.exec() == QDialog::Accepted) {
+            _captureEngine->start(dialog.getConfiguration());
+        }
     }
 
 }
@@ -152,4 +162,28 @@ void MainWindow::showWidget(QWidget* widget)
         widget->show();
     }
     _mdiArea->setActiveSubWindow(_mdiSubWindows[widget]);
+}
+
+
+
+//-----------------------------------------------------------------------------
+void MainWindow::captureStarted()
+{
+
+}
+
+
+//-----------------------------------------------------------------------------
+void MainWindow::captureStopped()
+{
+    _isCapturing = false;
+
+}
+
+
+//-----------------------------------------------------------------------------
+void MainWindow::captureError(const QString& error)
+{
+    _isCapturing = false;
+    QMessageBox::critical(this, "PortScope", error);
 }

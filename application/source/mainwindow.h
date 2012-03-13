@@ -27,6 +27,11 @@ protected slots:
     void stopCapture();
     void showWidget(QWidget* widget);
 
+    // Capture engine
+    void captureStarted();
+    void captureStopped();
+    void captureError(const QString& error);
+
 private:
   void loadPlugins();
 

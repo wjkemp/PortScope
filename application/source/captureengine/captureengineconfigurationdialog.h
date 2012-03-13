@@ -1,22 +1,28 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef __CAPTUREENGINECONFIGURATIONDIALOG_H__
+#define __CAPTUREENGINECONFIGURATIONDIALOG_H__
 
-#include <QtGui/QMainWindow>
-#include "ui_mainwindow.h"
+#include <QDialog>
+#include "captureengineconfiguration.h"
+#include "ui_captureengineconfigurationdialog.h"
 
-class MainWindow : public QMainWindow
+
+
+class CaptureEngineConfigurationDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
-    ~MainWindow();
+    CaptureEngineConfigurationDialog(QWidget *parent = 0);
+    ~CaptureEngineConfigurationDialog();
+
+    CaptureEngineConfiguration getConfiguration() const { return _config; }
+
+protected:
+    void accept();
 
 private:
-  void loadPlugins();
-
-private:
-    Ui::MainWindowClass ui;
+    Ui::CaptureEngineConfigurationDialog ui;
+    CaptureEngineConfiguration _config;
 };
 
-#endif // MAINWINDOW_H
+#endif

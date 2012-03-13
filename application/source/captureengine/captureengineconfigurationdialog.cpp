@@ -1,36 +1,24 @@
-#include "mainwindow.h"
-#include <QDir>
-#include <QPluginLoader>
+#include "captureengineconfigurationdialog.h"
 
 
 //-----------------------------------------------------------------------------
-MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
-    : QMainWindow(parent, flags)
+CaptureEngineConfigurationDialog::CaptureEngineConfigurationDialog(QWidget *parent)
+    : QDialog(parent)
 {
   ui.setupUi(this);
-  loadPlugins();
 }
 
 
 //-----------------------------------------------------------------------------
-MainWindow::~MainWindow()
+CaptureEngineConfigurationDialog::~CaptureEngineConfigurationDialog()
 {
 
 }
 
 
 //-----------------------------------------------------------------------------
-void MainWindow::loadPlugins()
+void CaptureEngineConfigurationDialog::accept()
 {
-
-  QDir pluginsDir = QDir("../plugins/bin");
-
-   foreach (QString fileName, pluginsDir.entryList(QDir::Files)) {
-       QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
-       QObject *plugin = loader.instance();
-       if (plugin) {
-
-       }
-   }
-
+    _config.setPortName(ui.portName->text());
+    QDialog::accept();
 }
