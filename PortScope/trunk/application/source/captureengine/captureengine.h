@@ -17,12 +17,19 @@ public:
     bool start(const CaptureEngineConfiguration& config);
     void stop();
 
+
+signals:
+    void started();
+    void stopped();
+    void error(const QString& error);
+
+
 protected:
     void run();
 
-
 private:
     ProtocolStack* _protocolStack;
+    CaptureEngineConfiguration _config;
 
 };
 
