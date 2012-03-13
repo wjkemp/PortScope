@@ -239,7 +239,7 @@ NTSTATUS PortScope_ControlWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*---------------------------------------------------------------------------*/
 NTSTATUS PortScope_ControlIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-    NTSTATUS status = STATUS_SUCCESS;
+    NTSTATUS status = STATUS_INVALID_DEVICE_REQUEST;
     PCONTROL_DEVICE_EXTENSION deviceExtension = (PCONTROL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION  irpStack;
 
@@ -287,10 +287,11 @@ NTSTATUS PortScope_ControlIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
             if (filterEntry) {
                 DBG1(("PortScope: Filter Device Object is already installed\n"));
+                status = STATUS_SUCCESS;
 
             } else {
                 DBG1(("PortScope: Installing filter driver\n"));
-                PortScope_InstallFilterDriver(DeviceObject, &deviceName);
+                status = PortScope_InstallFilterDriver(DeviceObject, &deviceName);
             }
 
         } break;
