@@ -110,7 +110,7 @@ NTSTATUS PortScope_ControlCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PAGED_CODE();
     
         
-    DBG0(("PortScope: ControlCreate\n"));
+    DBG2(("PortScope: ControlCreate\n"));
 
 
     deviceExtension = (PCONTROL_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
@@ -122,10 +122,12 @@ NTSTATUS PortScope_ControlCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     if (RtlCompareUnicodeString(&stack->FileObject->FileName, &deviceName, TRUE) == 0) {
         DBG1(("PortScope: Opening Control Handle for Transmit Data\n"));
         stack->FileObject->FsContext = &deviceExtension->TransmitDataTag;
+        Buffer_Clear(&deviceExtension->WriteBuffer);
 
     } else {
         DBG1(("PortScope: Opening Control Handle for Receive Data\n"));
         stack->FileObject->FsContext = &deviceExtension->ReceiveDataTag;
+        Buffer_Clear(&deviceExtension->ReadBuffer);
     }
 
     // Complete the IRP
@@ -140,12 +142,30 @@ NTSTATUS PortScope_ControlCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 NTSTATUS PortScope_ControlClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     NTSTATUS status = STATUS_SUCCESS;
-    PAGED_CODE();
-    
-    UNREFERENCED_PARAMETER(DeviceObject);
-        
-    DBG0(("PortScope: ControlClose\n"));
+    PCONTROL_DEVICE_EXTENSION deviceExtension;
+    PLIST_ENTRY listEntry;
 
+    PAGED_CODE();
+            
+    DBG2(("PortScope: ControlClose\n"));
+
+    /* Disable all the enabled filters */
+    deviceExtension = (PCONTROL_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+    listEntry = deviceExtension->FilterDeviceList.Flink;
+
+    while (listEntry != &deviceExtension->FilterDeviceList) {
+        PFILTER_DEVICE_EXTENSION filterDeviceExtension = 
+            CONTAINING_RECORD(listEntry, FILTER_DEVICE_EXTENSION, ListEntry);
+
+        if (filterDeviceExtension->State == FILTER_ENABLED) {
+            filterDeviceExtension->State = FILTER_DISABLED;
+        }
+
+        listEntry = listEntry->Flink;
+    }
+
+
+    /* Complete the request */
     Irp->IoStatus.Status = status;
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
@@ -162,7 +182,7 @@ NTSTATUS PortScope_ControlRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     
     PAGED_CODE();
         
-    DBG0(("PortScope: ControlRead\n"));
+    DBG2(("PortScope: ControlRead\n"));
 
     deviceExtension = (PCONTROL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -172,14 +192,12 @@ NTSTATUS PortScope_ControlRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     if (irpStack->FileObject->FsContext == &deviceExtension->TransmitDataTag) {
 
         /* Dispatch to the transmit data engine */
-        DBG1(("PortScope: Read Transmit Data\n"));
         status = RwEngine_DispatchRead(&deviceExtension->TransmitDataEngine, Irp);
 
     /* Receive Data Read */
     } else {
 
         /* Dispatch to the receive data engine */
-        DBG1(("PortScope: Read Receive Data\n"));
         status = RwEngine_DispatchRead(&deviceExtension->ReceiveDataEngine, Irp);
     }
 
@@ -227,7 +245,7 @@ NTSTATUS PortScope_ControlWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     
     UNREFERENCED_PARAMETER(DeviceObject);
         
-    DBG0(("PortScope: ControlWrite\n"));
+    DBG2(("PortScope: ControlWrite\n"));
 
     Irp->IoStatus.Status = status;
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
@@ -247,7 +265,7 @@ NTSTATUS PortScope_ControlIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     
     UNREFERENCED_PARAMETER(DeviceObject);
         
-    DBG0(("PortScope: ControlIoControl\n"));
+    DBG2(("PortScope: ControlIoControl\n"));
 
     Irp->IoStatus.Information = 0;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -262,13 +280,12 @@ NTSTATUS PortScope_ControlIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             PLIST_ENTRY listEntry;
             PFILTER_DEVICE_EXTENSION filterEntry = 0;
             PCWSTR buffer = (PCWSTR)Irp->AssociatedIrp.SystemBuffer;
-            ULONG length = irpStack->Parameters.DeviceIoControl.InputBufferLength;
-            DbgPrint("PortScope: Length: %d\n", length);
+            //ULONG length = irpStack->Parameters.DeviceIoControl.InputBufferLength;
 
 
             /* Initialize the device string */            
             RtlInitUnicodeString(&deviceName, buffer);
-            DbgPrint("PortScope: Opening %wZ\n", &deviceName);
+            DBG1(("PortScope: Attaching to %wZ\n", &deviceName));
 
             /* Search the Filter Device List for an installed filter */
             listEntry = deviceExtension->FilterDeviceList.Flink;
@@ -276,7 +293,6 @@ NTSTATUS PortScope_ControlIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 PFILTER_DEVICE_EXTENSION filterDeviceExtension = 
                     CONTAINING_RECORD(listEntry, FILTER_DEVICE_EXTENSION, ListEntry);
 
-                DbgPrint("PortScope: Checking %wZ\n", &filterDeviceExtension->DeviceName);
                 if (RtlCompareUnicodeString(&deviceName, &filterDeviceExtension->DeviceName, TRUE) == 0) {
                     filterEntry = filterDeviceExtension;
                     break;
@@ -286,11 +302,11 @@ NTSTATUS PortScope_ControlIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             }
 
             if (filterEntry) {
-                DBG1(("PortScope: Filter Device Object is already installed\n"));
+                DBG0(("PortScope: Filter Device Object is already installed\n"));
+                filterEntry->State = FILTER_ENABLED;
                 status = STATUS_SUCCESS;
 
             } else {
-                DBG1(("PortScope: Installing filter driver\n"));
                 status = PortScope_InstallFilterDriver(DeviceObject, &deviceName);
             }
 
@@ -314,7 +330,7 @@ NTSTATUS PortScope_ControlPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Irp);
         
-    DBG0(("PortScope: ControlPnp\n"));
+    DBG2(("PortScope: ControlPnp\n"));
 
     return status;
 }
@@ -329,7 +345,7 @@ NTSTATUS PortScope_ControlPower(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Irp);
         
-    DBG0(("PortScope: ControlPower\n"));
+    DBG2(("PortScope: ControlPower\n"));
 
     return status;
 }
@@ -344,7 +360,7 @@ NTSTATUS PortScope_ControlUnknown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Irp);
         
-    DBG0(("PortScope: ControlUnknown\n"));
+    DBG2(("PortScope: ControlUnknown\n"));
 
     return status;
 }
@@ -409,7 +425,7 @@ NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_ST
         ZwClose(fileHandle);
 
     } else {
-        DBG1(("PortScope: Could not open device file\n"));
+        DBG0(("PortScope: Could not open device file\n"));
     }
                       
                       
@@ -450,6 +466,7 @@ NTSTATUS PortScope_InstallFilterDriver(PDEVICE_OBJECT ControlDevice, PUNICODE_ST
                 filterDeviceExtension->Self = filterDeviceObject;
                 filterDeviceExtension->IrpsDispatched = 0;
                 filterDeviceExtension->IrpsCompleted = 0;
+                filterDeviceExtension->State = FILTER_ENABLED;
 
                 /* Store the device name */
                 RtlCreateUnicodeString(

@@ -55,9 +55,7 @@ NTSTATUS PortScope_DispatchCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PCOMMON_DEVICE_DATA commonDeviceData;
 
     PAGED_CODE();
-            
-    DBG0(("PortScope: DispatchCreate\n"));
-    
+                
     /* Dispatch */
     commonDeviceData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;
     switch (commonDeviceData->Type) {
@@ -77,11 +75,6 @@ NTSTATUS PortScope_DispatchClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     PAGED_CODE();
     
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-        
-    DBG0(("PortScope: DispatchClose\n"));
-
     /* Dispatch */
     commonDeviceData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;
     switch (commonDeviceData->Type) {
@@ -102,11 +95,6 @@ NTSTATUS PortScope_DispatchRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     PAGED_CODE();
     
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-        
-    DBG0(("PortScope: DispatchRead\n"));
-
     /* Dispatch */
     commonDeviceData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;
     switch (commonDeviceData->Type) {
@@ -125,13 +113,7 @@ NTSTATUS PortScope_DispatchWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PCOMMON_DEVICE_DATA commonDeviceData;
 
     PAGED_CODE();
-
-    UNREFERENCED_PARAMETER(DeviceObject);
-
-    
-    DBG0(("PortScope: DispatchWrite\n"));
-    
-
+       
     /* Dispatch */
     commonDeviceData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;
     switch (commonDeviceData->Type) {
@@ -151,18 +133,12 @@ NTSTATUS PortScope_DispatchIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     PAGED_CODE();
 
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-        
-    DBG0(("PortScope: DispatchIoControl\n"));
-
     /* Dispatch */
     commonDeviceData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;
     switch (commonDeviceData->Type) {
         case DEVICE_TYPE_CONTROL: status = PortScope_ControlIoControl(DeviceObject, Irp); break;
         case DEVICE_TYPE_FILTER: status = PortScope_FilterIoControl(DeviceObject, Irp); break;
     }    
-
 
     return status;
 }
@@ -175,11 +151,6 @@ NTSTATUS PortScope_DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PCOMMON_DEVICE_DATA commonDeviceData;
 
     PAGED_CODE();
-
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-        
-    DBG0(("PortScope: DispatchPnp\n"));
 
     /* Dispatch */
     commonDeviceData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;
@@ -200,11 +171,6 @@ NTSTATUS PortScope_DispatchPower(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     PAGED_CODE();
 
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-        
-    DBG0(("PortScope: DispatchPower\n"));
-
     /* Dispatch */
     commonDeviceData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;
     switch (commonDeviceData->Type) {
@@ -223,12 +189,6 @@ NTSTATUS PortScope_DispatchUnknown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PCOMMON_DEVICE_DATA commonDeviceData;
 
     PAGED_CODE();
-
-    
-    UNREFERENCED_PARAMETER(DeviceObject);
-    UNREFERENCED_PARAMETER(Irp);
-        
-    DBG0(("PortScope: DispatchUnknown\n"));
 
     /* Dispatch */
     commonDeviceData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;

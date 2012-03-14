@@ -31,6 +31,16 @@
  -----------------------------------------------------------------------------*/
 
 
+typedef enum _FILTER_STATE {
+
+    FILTER_DISABLED = 0,
+    FILTER_ENABLED,
+    FILTER_ABANDONED
+
+} FILTER_STATE;
+
+
+
 typedef struct
 {
     COMMON_DEVICE_DATA Common;
@@ -43,6 +53,7 @@ typedef struct
     ULONG IrpsDispatched;
     ULONG IrpsCompleted;
     UNICODE_STRING DeviceName;
+    FILTER_STATE State;
     LIST_ENTRY ListEntry;   
 
 } FILTER_DEVICE_EXTENSION, *PFILTER_DEVICE_EXTENSION;
