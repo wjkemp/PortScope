@@ -54,9 +54,15 @@ void Buffer_Initialize(BUFFER* obj, unsigned char* buffer, ULONG length)
 /*---------------------------------------------------------------------------*/
 void Buffer_Clear(BUFFER* obj)
 {
+    KIRQL irql;
+
+    KeAcquireSpinLock(&obj->lock, &irql);
+
 	obj->read = obj->head;
 	obj->write = obj->head;
 	obj->count = 0;	
+
+    KeReleaseSpinLock(&obj->lock, irql);
 }
 
 

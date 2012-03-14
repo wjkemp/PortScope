@@ -89,7 +89,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject, PUNICODE_STRING pRegistryPath
         pDriverObject->MajorFunction[IRP_MJ_READ]               = PortScope_DispatchRead;
         pDriverObject->MajorFunction[IRP_MJ_WRITE]              = PortScope_DispatchWrite;
         pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]     = PortScope_DispatchIoControl;
-        pDriverObject->MajorFunction[IRP_MJ_PNP]			          = PortScope_DispatchPnp;
+        pDriverObject->MajorFunction[IRP_MJ_PNP]			    = PortScope_DispatchPnp;
         pDriverObject->MajorFunction[IRP_MJ_POWER]              = PortScope_DispatchPower;
         pDriverObject->DriverUnload                             = PortScope_Unload; 
 
@@ -121,17 +121,13 @@ VOID PortScope_Unload(PDRIVER_OBJECT DriverObject)
 
     PAGED_CODE();
     
-    DBG0(("PortScope: Unload\n"));
+    DBG1(("PortScope: Unload\n"));
 
     deviceObject = DriverObject->DeviceObject;
     while (deviceObject) {
         commonData = (PCOMMON_DEVICE_DATA)deviceObject->DeviceExtension;
-        DbgPrint("PortScope: Device object has type %d, next device is %08X\n", commonData->Type, deviceObject->NextDevice);
-
         if (commonData->Type == DEVICE_TYPE_FILTER) {
             PFILTER_DEVICE_EXTENSION filterDeviceExtension = (PFILTER_DEVICE_EXTENSION)deviceObject->DeviceExtension;
-            
-            DbgPrint("PortScope: Removing Filter Driver");
             IoDetachDevice(filterDeviceExtension->NextLowerDriver);
             IoDeleteDevice(deviceObject);
         }

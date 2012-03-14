@@ -29,17 +29,14 @@
     Module Definitions
  -----------------------------------------------------------------------------*/
 
-#define DBG0(_x_) /* DbgPrint(_x_) */
-#define DBG1(_x_) DbgPrint(_x_)
-#define DBG2(_x_) DbgPrint(_x_)
-#define DBG3(_x_) DbgPrint(_x_)
-
+#define DBG0(_x_) DbgPrint _x_
+#define DBG1(_x_) DbgPrint _x_
+#define DBG2(_x_) //DbgPrint _x_
 
 /*
 #define DBG0(_x_)
 #define DBG1(_x_)
 #define DBG2(_x_)
-#define DBG3(_x_)
 */
 
 
