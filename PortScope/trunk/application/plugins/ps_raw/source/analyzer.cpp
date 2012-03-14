@@ -10,7 +10,7 @@ Analyzer::Analyzer(const QString& name) :
 {
     _display = new Display(this);
     _display->setWindowTitle(name);
-    connect(this, SIGNAL(addToDisplay(const QString&)), _display, SLOT(insertPlainText(const QString&)));
+    connect(this, SIGNAL(addToDisplay(const QString&)), _display, SLOT(insertPlainText(const QString&)));    
 }
 
 

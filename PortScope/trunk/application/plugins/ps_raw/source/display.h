@@ -13,6 +13,9 @@ public:
     Display(Analyzer* analyzer);
     ~Display();
 
+public slots:
+    void insertPlainText(const QString& text);
+
 private:
     Analyzer* _analyzer;
 
