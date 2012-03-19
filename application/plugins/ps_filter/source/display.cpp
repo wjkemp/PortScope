@@ -3,6 +3,7 @@
 #include <QGridLayout>
 
 
+
 //-----------------------------------------------------------------------------
 Display::Display(Analyzer* analyzer) :
     _analyzer(analyzer)
@@ -24,6 +25,8 @@ Display::Display(Analyzer* analyzer) :
     _updateTimer->setInterval(500);
     connect(_updateTimer, SIGNAL(timeout()), SLOT(onUpdate()));
     _updateTimer->start();
+
+    setStyleSheet("background: white;");
 
 }
 

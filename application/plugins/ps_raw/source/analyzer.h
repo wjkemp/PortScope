@@ -19,7 +19,7 @@ public:
     void processData(const void* data, size_t length, Flags flags);
 
 signals:
-    void addToDisplay(const QString& text);
+    void updateDisplay();
 
 private:
     QString _name;

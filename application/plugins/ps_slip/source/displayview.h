@@ -17,7 +17,14 @@ class DisplayView : public QTableView
 public:
     DisplayView(QWidget* parent = 0);
     ~DisplayView();
-
     void setModel(QAbstractItemModel* model);
+
+protected slots:
+    void updateDisplay();
+
+protected:
+    QSize sizeHint() const;
+
 };
+
 #endif

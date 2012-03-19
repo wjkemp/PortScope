@@ -8,8 +8,9 @@
 #include <QList>
 
 
-class Analyzer : public ProtocolAnalyzer, public SlipParser
+class Analyzer : public QObject, public ProtocolAnalyzer, public SlipParser
 {
+    Q_OBJECT
 
 public:
     Analyzer(const QString& name);
@@ -17,6 +18,9 @@ public:
     QWidget* displayWidget();
     void addChild(ProtocolAnalyzer* child);
     void processData(const void* data, size_t length, Flags flags);
+
+signals:
+    void updateDisplay();
 
 protected:
     void frameReceived(const void* data, size_t length);

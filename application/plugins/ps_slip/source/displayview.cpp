@@ -8,14 +8,14 @@
 //-----------------------------------------------------------------------------
 DisplayView::DisplayView(QWidget* parent)
 {
-
+    setStyleSheet("font-family: Consolas;");
 }
 
 
 //-----------------------------------------------------------------------------
 DisplayView::~DisplayView()
 {
-
+    int x = 0;
 }
 
 
@@ -38,7 +38,7 @@ void DisplayView::setModel(QAbstractItemModel* model)
         horizontalHeader()->setResizeMode(0, QHeaderView::Fixed);
         horizontalHeader()->resizeSection(0, 80);
         horizontalHeader()->setResizeMode(1, QHeaderView::Fixed);
-        horizontalHeader()->resizeSection(1, 150);
+        horizontalHeader()->resizeSection(1, 80);
         horizontalHeader()->setResizeMode(2, QHeaderView::Stretch);
     }
 
@@ -46,5 +46,19 @@ void DisplayView::setModel(QAbstractItemModel* model)
     if (oldModel) {
         delete oldModel;
     }
+}
+
+
+//-----------------------------------------------------------------------------
+void DisplayView::updateDisplay()
+{
+    scrollToBottom();
+}
+
+
+//-----------------------------------------------------------------------------
+QSize DisplayView::sizeHint() const
+{
+    return QSize(640, 480);
 }
 

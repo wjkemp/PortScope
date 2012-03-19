@@ -5,6 +5,9 @@
 #include <QDockWidget>
 #include <QMdiArea>
 #include <QMenuBar>
+#include <QToolBar>
+#include <QStatusBar>
+#include <QLabel>
 #include "protocolstack/protocolstack.h"
 #include "protocolstack/protocolstackview.h"
 #include "protocolstack/protocolstackmodel.h"
@@ -33,9 +36,6 @@ protected slots:
     void captureError(const QString& error);
 
 private:
-  void loadPlugins();
-
-private:
 
     // Static objects
     ProtocolStackView* _protocolStackView;
@@ -52,6 +52,9 @@ private:
 
     // Menu and toolbars
     QMenuBar* _menuBar;
+    QToolBar* _toolBar;
+    QStatusBar* _statusBar;
+    QLabel* _currentState;
 
     // Actions
     QAction* _actOpenConfiguration;
@@ -64,4 +67,4 @@ private:
 
 };
 
-#endif // MAINWINDOW_H
+#endif
