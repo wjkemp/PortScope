@@ -1,6 +1,6 @@
 #include "libps.h"
 #include <windows.h>
-
+#include <stdio.h>
 
 #define IOCTL_OPEN_PORT         CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_BUFFERED, FILE_WRITE_DATA)
 
@@ -26,22 +26,27 @@ typedef struct
     int flags;
 
 
-} LIBPS;
+} LIBPS_OBJ;
 
 
 
 /*---------------------------------------------------------------------------*/
-static LIBPS_RESULT LIBPS_IssueTransmitDataRead(LIBPS* obj);
-static LIBPS_RESULT LIBPS_IssueReceiveDataRead(LIBPS* obj);
+static LIBPS_RESULT LIBPS_IssueTransmitDataRead(LIBPS_OBJ* obj);
+static LIBPS_RESULT LIBPS_IssueReceiveDataRead(LIBPS_OBJ* obj);
 
 
 
 /*---------------------------------------------------------------------------*/
-LIBPS_HANDLE LIBPS_Initialize(size_t bufferSize)
+LIBPS_HANDLE LIBPS_Create(const wchar_t* port, size_t bufferSize)
 {
-    LIBPS* obj = (LIBPS*)malloc(sizeof(LIBPS));
+    LIBPS_OBJ* obj = (LIBPS_OBJ*)malloc(sizeof(LIBPS_OBJ));
+    wchar_t deviceName[128];
+    BOOL result = FALSE;
+
     if (obj) {
 
+        /* Clear the structure */
+        ZeroMemory(obj, sizeof(LIBPS_OBJ));
 
         /* Open handles to the driver */
         obj->transmitDataHandle = CreateFile(
@@ -64,72 +69,109 @@ LIBPS_HANDLE LIBPS_Initialize(size_t bufferSize)
             NULL
             );
 
-        {            
+
+        if ((obj->transmitDataHandle != INVALID_HANDLE_VALUE) &&
+            (obj->receiveDataHandle != INVALID_HANDLE_VALUE)) {
+
             DWORD bytesTransferred = 0;
-            DeviceIoControl(
+
+            // Format the device name
+            swprintf(deviceName, 128, L"\\DosDevices\\%s", port);
+
+            // Attempt to hook the port
+            result = DeviceIoControl(
                 obj->transmitDataHandle,
                 IOCTL_OPEN_PORT,
-                L"\\DosDevices\\COM15",
+                deviceName,
                 50,
                 0,
                 0,
                 &bytesTransferred,
                 0);
+
+            if (result) {
+
+                /* Clear the flags */
+                obj->flags = 0;
+
+                /* Create the signaling events */
+                obj->transmitDataEvent = CreateEvent(0, FALSE, FALSE, 0);
+                obj->receiveDataEvent = CreateEvent(0, FALSE, FALSE, 0);
+
+                /* Create the buffers */
+                obj->bufferSize = bufferSize;
+                obj->transmitDataBuffer = malloc(bufferSize);
+                obj->receiveDataBuffer = malloc(bufferSize);
+
+                /* Create the overlapped structures */
+                ZeroMemory(&obj->transmitDataTransfer, sizeof(OVERLAPPED));
+                ZeroMemory(&obj->receiveDataTransfer, sizeof(OVERLAPPED));
+
+                /* Set the events */
+                obj->transmitDataTransfer.hEvent = obj->transmitDataEvent;
+                obj->receiveDataTransfer.hEvent = obj->receiveDataEvent;
+
+
+                /* Final check before issuing reads */
+                if ((obj->transmitDataEvent != NULL) &&
+                    (obj->receiveDataEvent != NULL) &&
+                    (obj->transmitDataBuffer != NULL) &&
+                    (obj->receiveDataBuffer != NULL)) {
+
+
+                    /* Issue the initial operations */
+                    LIBPS_IssueTransmitDataRead(obj);
+                    LIBPS_IssueReceiveDataRead(obj);
+
+                } else {
+
+                }
+
+            /* Failure to attach to the port */
+            } else {
+                CloseHandle(obj->transmitDataHandle);
+                CloseHandle(obj->receiveDataHandle);
+                free(obj);
+                obj = 0;
+            }
+
+        /* Failure to open the portscope driver */
+        } else {
+            free(obj);
+            obj = 0;
         }
-
-
-        /* Create the signaling events */
-        obj->transmitDataEvent = CreateEvent(
-            0,
-            FALSE,
-            FALSE,
-            0);
-
-        obj->receiveDataEvent = CreateEvent(
-            0,
-            FALSE,
-            FALSE,
-            0);
-
-        /* Create the buffers */
-        obj->bufferSize = bufferSize;
-        obj->transmitDataBuffer = malloc(bufferSize);
-        obj->receiveDataBuffer = malloc(bufferSize);
-
-        /* Create the overlapped structures */
-        ZeroMemory(&obj->transmitDataTransfer, sizeof(OVERLAPPED));
-        ZeroMemory(&obj->receiveDataTransfer, sizeof(OVERLAPPED));
-
-        obj->transmitDataTransfer.hEvent = obj->transmitDataEvent;
-        obj->receiveDataTransfer.hEvent = obj->receiveDataEvent;
-
-        obj->flags = 0;
-        LIBPS_IssueTransmitDataRead(obj);
-        LIBPS_IssueReceiveDataRead(obj);
-
-
     }
+
 
     return obj;
 }
 
 
 /*---------------------------------------------------------------------------*/
+void LIBPS_Close(LIBPS_HANDLE handle)
+{
+
+}
+
+
+/*---------------------------------------------------------------------------*/
 LIBPS_RESULT LIBPS_WaitForData(LIBPS_HANDLE handle, int* flags)
 {
-    LIBPS* obj = (LIBPS*)handle;
+    LIBPS_OBJ* obj = (LIBPS_OBJ*)handle;
+    LIBPS_RESULT result = LIBPS_ERROR;
     HANDLE handles[2];
     DWORD waitResult;
 
 
-    if (obj->flags) {
 
-    } else {
+    /* Only wait if there is no available data */
+    if (obj->flags == 0) {
 
+        /* Initialize the event array */
         handles[0] = obj->transmitDataEvent;
         handles[1] = obj->receiveDataEvent;
 
-
+        /* Wait on the events */
         waitResult = WaitForMultipleObjects(
             2,
             handles,
@@ -141,16 +183,19 @@ LIBPS_RESULT LIBPS_WaitForData(LIBPS_HANDLE handle, int* flags)
             /* Transmit Event */
             case WAIT_OBJECT_0: {
                 DWORD bytesTransferred = 0;
-                GetOverlappedResult(
+                if (GetOverlappedResult(
                     obj->transmitDataHandle,
                     &obj->transmitDataTransfer,
                     &bytesTransferred,
-                    FALSE);
+                    FALSE)) {
 
-                if (bytesTransferred > 0) {
-                    obj->flags = LIBPS_TRANSMIT_DATA_AVAILABLE;
-                } else {
-                    LIBPS_IssueTransmitDataRead(obj);
+                    if (bytesTransferred > 0) {
+                        obj->flags |= LIBPS_TRANSMIT_DATA_AVAILABLE;
+                        result = LIBPS_OK;
+
+                    } else {
+                        result = LIBPS_IssueTransmitDataRead(obj);
+                    }
                 }
 
             } break;
@@ -158,16 +203,18 @@ LIBPS_RESULT LIBPS_WaitForData(LIBPS_HANDLE handle, int* flags)
             /* Receive Event */
             case (WAIT_OBJECT_0 + 1): {
                 DWORD bytesTransferred = 0;
-                GetOverlappedResult(
+                if (GetOverlappedResult(
                     obj->receiveDataHandle,
                     &obj->receiveDataTransfer,
                     &bytesTransferred,
-                    FALSE);
+                    FALSE)) {
 
-                if (bytesTransferred > 0) {
-                    obj->flags = LIBPS_RECEIVE_DATA_AVAILABLE;
-                } else {
-                    LIBPS_IssueReceiveDataRead(obj);
+                    if (bytesTransferred > 0) {
+                        obj->flags |= LIBPS_RECEIVE_DATA_AVAILABLE;
+                        result = LIBPS_OK;
+                    } else {
+                        result = LIBPS_IssueReceiveDataRead(obj);
+                    }
                 }
 
             } break;
@@ -182,75 +229,85 @@ LIBPS_RESULT LIBPS_WaitForData(LIBPS_HANDLE handle, int* flags)
         }
     }
 
-    *flags = obj->flags;
 
-    return 0;
+    *flags = obj->flags;
+    return result;
 }
 
 
 /*---------------------------------------------------------------------------*/
 LIBPS_RESULT LIBPS_ReadTransmitData(LIBPS_HANDLE handle, void* data, size_t* length)
 {
-    LIBPS* obj = (LIBPS*)handle;
+    LIBPS_OBJ* obj = (LIBPS_OBJ*)handle;
+    LIBPS_RESULT result = LIBPS_ERROR;
 
-    if (obj->flags == LIBPS_TRANSMIT_DATA_AVAILABLE) {
+    if (obj->flags & LIBPS_TRANSMIT_DATA_AVAILABLE) {
 
         DWORD bytesTransferred = 0;
-        GetOverlappedResult(
-            obj->transmitDataHandle,
-            &obj->transmitDataTransfer,
-            &bytesTransferred,
-            FALSE);
-        
+        if (GetOverlappedResult(
+                obj->transmitDataHandle,
+                &obj->transmitDataTransfer,
+                &bytesTransferred,
+                FALSE)) {       
 
-        memcpy(data, obj->transmitDataBuffer, bytesTransferred);
-        *length = bytesTransferred;
+            /* Copy the data */
+            memcpy(data, obj->transmitDataBuffer, bytesTransferred);
+            *length = bytesTransferred;
+            obj->flags = 0;
 
-        obj->flags = 0;
-        LIBPS_IssueTransmitDataRead(obj);
+            /* Issue the next read */
+            result = LIBPS_IssueTransmitDataRead(obj);
+        }
     }
 
-    return 0;
+    return result;
 }
 
 
 /*---------------------------------------------------------------------------*/
 LIBPS_RESULT LIBPS_ReadReceiveData(LIBPS_HANDLE handle, void* data, size_t* length)
 {
-    LIBPS* obj = (LIBPS*)handle;
+    LIBPS_OBJ* obj = (LIBPS_OBJ*)handle;
+    LIBPS_RESULT result = LIBPS_ERROR;
 
-    if (obj->flags == LIBPS_RECEIVE_DATA_AVAILABLE) {
+    if (obj->flags & LIBPS_RECEIVE_DATA_AVAILABLE) {
 
         DWORD bytesTransferred = 0;
-        GetOverlappedResult(
-            obj->receiveDataHandle,
-            &obj->receiveDataTransfer,
-            &bytesTransferred,
-            FALSE);
-        
+        if (GetOverlappedResult(
+                obj->receiveDataHandle,
+                &obj->receiveDataTransfer,
+                &bytesTransferred,
+                FALSE)) {       
 
-        memcpy(data, obj->receiveDataBuffer, bytesTransferred);
-        *length = bytesTransferred;
+            /* Copy the data */
+            memcpy(data, obj->receiveDataBuffer, bytesTransferred);
+            *length = bytesTransferred;
+            obj->flags = 0;
 
-        obj->flags = 0;
-        LIBPS_IssueReceiveDataRead(obj);
+            /* Issue the next read */
+            result = LIBPS_IssueReceiveDataRead(obj);
+        }
     }
 
-    return 0;
+    return result;
 }
 
 
 /*---------------------------------------------------------------------------*/
-LIBPS_RESULT LIBPS_IssueTransmitDataRead(LIBPS* obj)
+LIBPS_RESULT LIBPS_IssueTransmitDataRead(LIBPS_OBJ* obj)
 {
+    LIBPS_RESULT result = LIBPS_OK;
+
     ReadFile(obj->transmitDataHandle, obj->transmitDataBuffer, obj->bufferSize, 0, &obj->transmitDataTransfer);
-    return 0;
+
+    return result;
 }
 
 
 /*---------------------------------------------------------------------------*/
-LIBPS_RESULT LIBPS_IssueReceiveDataRead(LIBPS* obj)
+LIBPS_RESULT LIBPS_IssueReceiveDataRead(LIBPS_OBJ* obj)
 {
+    LIBPS_RESULT result = LIBPS_OK;
     ReadFile(obj->receiveDataHandle, obj->receiveDataBuffer, obj->bufferSize, 0, &obj->receiveDataTransfer);
-    return 0;
+    return result;
 }

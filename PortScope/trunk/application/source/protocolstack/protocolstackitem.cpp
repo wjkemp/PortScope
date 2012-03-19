@@ -25,6 +25,7 @@ ProtocolStackItem::ProtocolStackItem(
 //----------------------------------------------------------------
 ProtocolStackItem::~ProtocolStackItem()
 {
+    delete _analyzer;
     qDeleteAll(_children);
 }
 

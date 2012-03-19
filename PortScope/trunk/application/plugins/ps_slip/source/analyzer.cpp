@@ -10,6 +10,7 @@ Analyzer::Analyzer(const QString& name) :
     _displayView = new DisplayView();
     _displayView->setModel(_displayModel);
     _displayView->setWindowTitle(name);
+    connect(this, SIGNAL(updateDisplay()), _displayView, SLOT(updateDisplay()));
 }
 
 
@@ -46,6 +47,8 @@ void Analyzer::frameReceived(const void* data, size_t length)
 {
     // Log
     _displayModel->addItem(SlipFrame(data, length));
+
+    emit updateDisplay();
 
     // Forward
     ProtocolAnalyzer* child;

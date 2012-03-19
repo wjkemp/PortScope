@@ -2,6 +2,7 @@
 #define __CAPTUREENGINE_H__
 
 #include <QThread>
+#include <QMutex>
 #include "protocolstack/protocolstack.h"
 #include "captureengineconfiguration.h"
 
@@ -30,6 +31,8 @@ protected:
 private:
     ProtocolStack* _protocolStack;
     CaptureEngineConfiguration _config;
+    QMutex _lock;
+    bool _stop;
 
 };
 

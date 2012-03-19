@@ -40,6 +40,9 @@ void ProtocolStackView::setProtocolStack(ProtocolStack* stack)
         QItemSelectionModel* selectionModel = new QItemSelectionModel(_model);
         setSelectionModel(selectionModel);
         connect(selectionModel, SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), SLOT(onSelectionChanged(const QModelIndex&, const QModelIndex&)));
+
+        header()->resizeSection(0, 200);
+        header()->setResizeMode(1, QHeaderView::Stretch);
     }
 
 }
@@ -50,6 +53,9 @@ void ProtocolStackView::onSelectionChanged(const QModelIndex& current, const QMo
 {
     ProtocolStackItem* item = _model->itemAt(current);
     if (item) {
-        emit displayWidgetChanged(item->analyzer()->displayWidget());
+        QWidget* displayWidget = item->analyzer()->displayWidget();
+        if (displayWidget) {
+            emit displayWidgetChanged(displayWidget);
+        }
     }
 }

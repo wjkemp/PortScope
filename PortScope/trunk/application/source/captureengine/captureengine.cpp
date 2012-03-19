@@ -1,10 +1,12 @@
 #include "captureengine.h"
+#include <QMutexLocker>
 #include <libps.h>
 
 
 //-----------------------------------------------------------------------------
 CaptureEngine::CaptureEngine(ProtocolStack* protocolStack) :
-    _protocolStack(protocolStack)
+    _protocolStack(protocolStack),
+    _stop(false)
 {
 
 }
@@ -30,6 +32,8 @@ bool CaptureEngine::start(const CaptureEngineConfiguration& config)
 //-----------------------------------------------------------------------------
 void CaptureEngine::stop()
 {
+    QMutexLocker lock(&_lock);
+    _stop = true;
 
 }
 
@@ -38,6 +42,7 @@ void CaptureEngine::stop()
 void CaptureEngine::run()
 {
     LIBPS_RESULT result;
+    bool stop = false;
 
 
     // Create the capture buffer
@@ -50,6 +55,9 @@ void CaptureEngine::run()
         captureBufferSize);
 
     if (device) {
+
+        // Indicate start
+        emit started();
 
         do {
 
@@ -70,10 +78,21 @@ void CaptureEngine::run()
                 }
             }
 
-        } while (result == LIBPS_OK);
+            _lock.lock();
+            stop = _stop;
+            _lock.unlock();
+
+        } while ((result == LIBPS_OK) && (stop == false));
 
         // Close the handle
         LIBPS_Close(device);
+
+        // Delete the capture buffer
+        delete [] captureBuffer;
+
+        // Indicate stop
+        _stop = false;
+        emit stopped();
 
     } else {
         emit error("Could not open device");

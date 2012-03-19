@@ -17,7 +17,7 @@ ProtocolStack::ProtocolStack(const QString& path)
 //-----------------------------------------------------------------------------
 ProtocolStack::~ProtocolStack()
 {
-
+    delete _root;
 }
 
 

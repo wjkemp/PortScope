@@ -3,6 +3,7 @@
 #include <QPluginLoader>
 #include <QMdiSubWindow>
 #include <QMessageBox>
+#include <qmath.h>
 #include "captureengine/captureengineconfigurationdialog.h"
 
 
@@ -15,30 +16,35 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     _captureEngine(0)
 {
 
+    setWindowTitle("PortScope");
+
     // Create MDI Area
     _mdiArea = new QMdiArea();
     setCentralWidget(_mdiArea);
-
 
     // Create the protocol stack
     _protocolStackView = new ProtocolStackView();
 
     _protocolStackDockWidget = new QDockWidget("Protocol Stack");
     _protocolStackDockWidget->setWidget(_protocolStackView);
-    addDockWidget(Qt::LeftDockWidgetArea, _protocolStackDockWidget);
+    addDockWidget(Qt::BottomDockWidgetArea, _protocolStackDockWidget);
 
 
     // Create the actions
-    _actOpenConfiguration = new QAction("Open Configuration", this);
+    _actOpenConfiguration = new QAction(QIcon(":/MainWindow/icons/open.png"), "Open Configuration", this);
     connect(_actOpenConfiguration, SIGNAL(triggered()), SLOT(openConfiguration()));
 
     _actCloseConfiguration = new QAction("Close Configuration", this);
+    connect(_actCloseConfiguration, SIGNAL(triggered()), SLOT(closeConfiguration()));
 
-    _actStartCapture = new QAction("Start Capture", this);
+    _actStartCapture = new QAction(QIcon(":/MainWindow/icons/startcapture.png"), "Start Capture", this);
+    _actStartCapture->setEnabled(false);
     connect(_actStartCapture, SIGNAL(triggered()), SLOT(startCapture()));
 
 
-    _actStopCapture = new QAction("Stop Capture", this);
+    _actStopCapture = new QAction(QIcon(":/MainWindow/icons/stopcapture.png"), "Stop Capture", this);
+    _actStopCapture->setEnabled(false);
+    connect(_actStopCapture, SIGNAL(triggered()), SLOT(stopCapture()));
 
     _actTileSubWindows = new QAction("Tile", this);
     connect(_actTileSubWindows, SIGNAL(triggered()), _mdiArea, SLOT(tileSubWindows()));
@@ -46,6 +52,21 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     _actCascadeSubWindows = new QAction("Cascade", this);
     connect(_actCascadeSubWindows, SIGNAL(triggered()), _mdiArea, SLOT(cascadeSubWindows()));
 
+
+    // Create the toolbar
+    _toolBar = new QToolBar();
+    _toolBar->addAction(_actOpenConfiguration);
+    _toolBar->addSeparator();
+    _toolBar->addAction(_actStartCapture);
+    _toolBar->addAction(_actStopCapture);
+    addToolBar(_toolBar);
+
+    // Create the status bar
+    _statusBar = new QStatusBar();
+    _currentState = new QLabel();
+    _currentState->setText("Idle");
+    _statusBar->addPermanentWidget(_currentState);
+    setStatusBar(_statusBar);
 
 
     // Create the menu bar
@@ -85,10 +106,9 @@ void MainWindow::openConfiguration()
         closeConfiguration();
     }
 
-    // Create a new plugin stack
+    // Create a new protocol stack
     try {
 
-        // Create the plugin stack
         _protocolStack = new ProtocolStack("stack.xml");
         _captureEngine = new CaptureEngine(_protocolStack);
         _protocolStackView->setProtocolStack(_protocolStack);
@@ -103,6 +123,7 @@ void MainWindow::openConfiguration()
         QWidget* displayWidget;
         foreach(displayWidget, displayWidgets) {
             QMdiSubWindow* subWindow = new QMdiSubWindow();
+            subWindow->setStyleSheet("background: white;");
             subWindow->setWidget(displayWidget);
             _mdiArea->addSubWindow(subWindow);
             _mdiSubWindows[displayWidget] = subWindow;
@@ -117,6 +138,7 @@ void MainWindow::openConfiguration()
             SLOT(showWidget(QWidget*)));
 
         _isConfigured = true;
+        _actStartCapture->setEnabled(true);
 
     } catch (const std::exception& e) {
 
@@ -128,6 +150,21 @@ void MainWindow::openConfiguration()
 void MainWindow::closeConfiguration()
 {
 
+    /* Delete all the MDI subwindows */
+    QMapIterator<QWidget*, QMdiSubWindow*> i(_mdiSubWindows);
+    while (i.hasNext()) {
+        i.next();
+        delete i.value();
+    }
+    _mdiSubWindows.clear();
+
+    /* Destroy the protocol stack */
+    _protocolStackView->setProtocolStack(0);
+    delete _protocolStack;
+    delete _captureEngine;
+
+    _protocolStack = 0;
+    _captureEngine = 0;
 }
 
 
@@ -169,15 +206,18 @@ void MainWindow::showWidget(QWidget* widget)
 //-----------------------------------------------------------------------------
 void MainWindow::captureStarted()
 {
-
+    _isCapturing = true;
+    _actStartCapture->setEnabled(false);
+    _actStopCapture->setEnabled(true);
 }
 
 
 //-----------------------------------------------------------------------------
 void MainWindow::captureStopped()
 {
+    _actStartCapture->setEnabled(true);
+    _actStopCapture->setEnabled(false);
     _isCapturing = false;
-
 }
 
 
@@ -187,3 +227,4 @@ void MainWindow::captureError(const QString& error)
     _isCapturing = false;
     QMessageBox::critical(this, "PortScope", error);
 }
+

@@ -9,8 +9,9 @@ Analyzer::Analyzer(const QString& name, Flags filterMask) :
     _filterMask(filterMask),
     _bytesProcessed(0)
 {
-    _display = new Display(this);
-    _display->setWindowTitle(name);
+    //_display = new Display(this);
+    //_display->setWindowTitle(name);
+    _display = 0;
 }
 
 
