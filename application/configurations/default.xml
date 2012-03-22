@@ -1,10 +1,8 @@
 <ProtocolStack>
 	<Protocol name="Transmit Data" plugin="ps_filter.dll" parameters="TX" >
 		<Protocol name="Raw Transmit Data" plugin="ps_raw.dll" />
-		<Protocol name="Transmitted SLIP Frames" plugin="ps_slip.dll" />
 	</Protocol>
 	<Protocol name="Receive Data" plugin="ps_filter.dll" parameters="RX" >
 		<Protocol name="Raw Receive Data" plugin="ps_raw.dll" />
-		<Protocol name="Received SLIP Frames" plugin="ps_slip.dll" />
 	</Protocol>
 </ProtocolStack>

@@ -1,4 +1,4 @@
-/*  captureengine.h
+/*  version.h
  *
  *  Copyright 2012 Willem Kemp.
  *  All rights reserved.
@@ -19,42 +19,11 @@
  *  along with PortScope. If not, see http://www.gnu.org/licenses/.
  *
  */
-#ifndef __CAPTUREENGINE_H__
-#define __CAPTUREENGINE_H__
+#ifndef __VERSION_H__
+#define __VERSION_H__
 
-#include <QThread>
-#include <QMutex>
-#include "protocolstack/protocolstack.h"
-#include "captureengineconfiguration.h"
-
-
-class CaptureEngine : public QThread
-{
-    Q_OBJECT
-
-public:
-    CaptureEngine(ProtocolStack* protocolStack);
-    ~CaptureEngine();
-
-    bool start(const CaptureEngineConfiguration& config);
-    void stop();
-
-
-signals:
-    void started();
-    void stopped();
-    void error(const QString& error);
-
-
-protected:
-    void run();
-
-private:
-    ProtocolStack* _protocolStack;
-    CaptureEngineConfiguration _config;
-    QMutex _lock;
-    bool _stop;
-
-};
+#define PORTSCOPE_VERSION_MAJOR     1
+#define PORTSCOPE_VERSION_MINOR     0
+#define PORTSCOPE_VERSION_BUILD     0
 
 #endif
