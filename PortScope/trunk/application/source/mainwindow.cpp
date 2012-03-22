@@ -1,8 +1,31 @@
+/*  mainwindow.cpp
+ *
+ *  Copyright 2012 Willem Kemp.
+ *  All rights reserved.
+ *
+ *  This file is part of PortScope.
+ *
+ *  PortScope is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  PortScope is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with PortScope. If not, see http://www.gnu.org/licenses/.
+ *
+ */
 #include "mainwindow.h"
+#include "version.h"
 #include <QDir>
 #include <QPluginLoader>
 #include <QMdiSubWindow>
 #include <QMessageBox>
+#include <QFileDialog>
 #include <qmath.h>
 #include "captureengine/captureengineconfigurationdialog.h"
 
@@ -16,7 +39,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     _captureEngine(0)
 {
 
-    setWindowTitle("PortScope");
+    setWindowTitle(
+        QString("PortScope [Portscope ver %1.%2.%3]")
+            .arg(PORTSCOPE_VERSION_MAJOR)
+            .arg(PORTSCOPE_VERSION_MINOR)
+            .arg(PORTSCOPE_VERSION_BUILD));
+
 
     // Create MDI Area
     _mdiArea = new QMdiArea();
@@ -101,47 +129,51 @@ MainWindow::~MainWindow()
 void MainWindow::openConfiguration()
 {
 
-    // Close configuration if already open
-    if (_isConfigured) {
-        closeConfiguration();
-    }
+    // Show the Open File Dialog
+    QString fileName = QFileDialog::getOpenFileName(this, "Open Capture Configuration", QString(), "*.xml");
+    if (!fileName.isEmpty()) {
 
-    // Create a new protocol stack
-    try {
-
-        _protocolStack = new ProtocolStack("stack.xml");
-        _captureEngine = new CaptureEngine(_protocolStack);
-        _protocolStackView->setProtocolStack(_protocolStack);
-
-        // Connect capture engine signals
-        connect(_captureEngine, SIGNAL(started()), SLOT(captureStarted()));
-        connect(_captureEngine, SIGNAL(stopped()), SLOT(captureStopped()));
-        connect(_captureEngine, SIGNAL(error(const QString&)), SLOT(captureError(const QString&)));
-
-        // Add display widgets to the widget stack
-        QList<QWidget*> displayWidgets(_protocolStack->getDisplayWidgets());
-        QWidget* displayWidget;
-        foreach(displayWidget, displayWidgets) {
-            QMdiSubWindow* subWindow = new QMdiSubWindow();
-            subWindow->setStyleSheet("background: white;");
-            subWindow->setWidget(displayWidget);
-            _mdiArea->addSubWindow(subWindow);
-            _mdiSubWindows[displayWidget] = subWindow;
-            subWindow->show();
+        // Close configuration if already open
+        if (_isConfigured) {
+            closeConfiguration();
         }
 
-        _mdiArea->tileSubWindows();
+        // Create a new protocol stack
+        try {
 
-        connect(
-            _protocolStackView,
-            SIGNAL(displayWidgetChanged(QWidget*)),
-            SLOT(showWidget(QWidget*)));
+            _protocolStack = new ProtocolStack(fileName);
+            _captureEngine = new CaptureEngine(_protocolStack);
+            _protocolStackView->setProtocolStack(_protocolStack);
 
-        _isConfigured = true;
-        _actStartCapture->setEnabled(true);
+            // Connect capture engine signals
+            connect(_captureEngine, SIGNAL(started()), SLOT(captureStarted()));
+            connect(_captureEngine, SIGNAL(stopped()), SLOT(captureStopped()));
+            connect(_captureEngine, SIGNAL(error(const QString&)), SLOT(captureError(const QString&)));
 
-    } catch (const std::exception& e) {
+            // Add display widgets to the widget stack
+            QList<QWidget*> displayWidgets(_protocolStack->getDisplayWidgets());
+            QWidget* displayWidget;
+            foreach(displayWidget, displayWidgets) {
+                QMdiSubWindow* subWindow = new QMdiSubWindow();
+                subWindow->setWidget(displayWidget);
+                _mdiArea->addSubWindow(subWindow);
+                _mdiSubWindows[displayWidget] = subWindow;
+                subWindow->show();
+            }
 
+            _mdiArea->tileSubWindows();
+
+            connect(
+                _protocolStackView,
+                SIGNAL(displayWidgetChanged(QWidget*)),
+                SLOT(showWidget(QWidget*)));
+
+            _isConfigured = true;
+            _actStartCapture->setEnabled(true);
+
+        } catch (const std::exception& e) {
+
+        }
     }
 }
 
@@ -176,6 +208,7 @@ void MainWindow::startCapture()
         CaptureEngineConfigurationDialog dialog;
         if (dialog.exec() == QDialog::Accepted) {
             _captureEngine->start(dialog.getConfiguration());
+            _currentState->setText(QString("Capturing on %1").arg(dialog.getConfiguration().portName()));
         }
     }
 
@@ -218,6 +251,7 @@ void MainWindow::captureStopped()
     _actStartCapture->setEnabled(true);
     _actStopCapture->setEnabled(false);
     _isCapturing = false;
+    _currentState->setText("Idle");
 }
 
 
