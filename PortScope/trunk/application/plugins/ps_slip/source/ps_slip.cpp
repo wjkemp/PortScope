@@ -1,6 +1,6 @@
 /*  ps_slip.cpp
  *
- *  Copyright 2012 Willem Kemp.
+ *  Copyright (C) 2012 Willem Kemp <http://www.thenocturnaltree.com>
  *  All rights reserved.
  *
  *  This file is part of PortScope.

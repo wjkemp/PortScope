@@ -1,6 +1,6 @@
 /*  version.h
  *
- *  Copyright 2012 Willem Kemp.
+ *  Copyright (C) 2012 Willem Kemp <http://www.thenocturnaltree.com>
  *  All rights reserved.
  *
  *  This file is part of PortScope.
@@ -22,8 +22,17 @@
 #ifndef __VERSION_H__
 #define __VERSION_H__
 
+#define STR(x) #x
+#define VER_STR(x) STR(x) 
+
+
 #define PORTSCOPE_VERSION_MAJOR     1
 #define PORTSCOPE_VERSION_MINOR     0
 #define PORTSCOPE_VERSION_BUILD     0
+
+#define PORTSCOPE_VERSION_STRING    \
+    VER_STR(PORTSCOPE_VERSION_MAJOR) "." \
+    VER_STR(PORTSCOPE_VERSION_MINOR) "." \
+    VER_STR(PORTSCOPE_VERSION_BUILD)
 
 #endif
