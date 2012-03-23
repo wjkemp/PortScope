@@ -1,6 +1,6 @@
 /*  mainwindow.h
  *
- *  Copyright 2012 Willem Kemp.
+ *  Copyright (C) 2012 Willem Kemp <http://www.thenocturnaltree.com>
  *  All rights reserved.
  *
  *  This file is part of PortScope.
@@ -44,6 +44,10 @@ public:
     MainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
     ~MainWindow();
 
+
+protected:
+    void closeEvent(QCloseEvent* event);
+
 protected slots:
     void openConfiguration();
     void closeConfiguration();
@@ -56,6 +60,8 @@ protected slots:
     void captureStopped();
     void captureError(const QString& error);
 
+    void showAboutBox();
+
 private:
 
     // Static objects
@@ -67,6 +73,7 @@ private:
     // Configuration-created objects
     bool _isConfigured;
     bool _isCapturing;
+    bool _exitWhenCaptureEnds;
     ProtocolStack* _protocolStack;
     CaptureEngine* _captureEngine;
 
@@ -85,6 +92,8 @@ private:
 
     QAction* _actTileSubWindows;
     QAction* _actCascadeSubWindows;
+
+    QAction* _actAbout;
 
 };
 

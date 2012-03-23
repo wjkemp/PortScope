@@ -1,5 +1,3 @@
-
-
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "WinVer.nsh"
@@ -11,8 +9,8 @@
 ;General
 
   ;Name and file
-  Name "PortScope Installer"
-  OutFile "portscope-install.exe"
+  Name "PortScope"
+  OutFile "portscope-1.0.0.exe"
 
   ;Default installation folder
   InstallDir "$LOCALAPPDATA\PortScope"
@@ -31,6 +29,7 @@
 ;--------------------------------
 ;Pages
 
+  !insertmacro MUI_PAGE_LICENSE "gpl-3.0.txt"
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
   
@@ -49,20 +48,23 @@ Section "Installation Files" SecInstallationFiles
     SetShellVarContext all
     
     
+    ; License
+    File "gpl-3.0.txt"
 
-    	; Application
-	File ..\application\bin\release\portscope.exe
-	File ..\application\configurations\default.xml
-	File ..\library\libportscope\lib\libportscope.dll
+    ; Application
+	File "..\application\bin\release\portscope.exe"
+	File "..\application\configurations\default.xml"
+	File "..\library\libportscope\lib\libportscope.dll"
 
+    ; Qt Libraries
+	File $%QTDIR%\bin\QtCore4.dll
+	File $%QTDIR%\bin\QtGui4.dll
+	File $%QTDIR%\bin\QtXml4.dll
+    
 	CreateDirectory "$SMPROGRAMS\PortScope"
     CreateShortcut  "$SMPROGRAMS\PortScope\PortScope.lnk" $INSTDIR\portscope.exe
     CreateShortcut  "$SMPROGRAMS\PortScope\Uninstall PortScope.lnk" $INSTDIR\uninstall.exe
   
-    ; Qt
-	File $%QTDIR%\bin\QtCore4.dll
-	File $%QTDIR%\bin\QtGui4.dll
-	File $%QTDIR%\bin\QtXml4.dll
     
     ; Plugins
     SetOutPath "$INSTDIR\plugins"
@@ -80,9 +82,7 @@ Section "Installation Files" SecInstallationFiles
     SetOutPath "$INSTDIR\drivers\win7_64"
     File ..\driver\source\objfre_win7_amd64\amd64\portscope.sys 
 
-
-  
-  
+    
     ; Store installation folder
     WriteRegStr HKCU "Software\PortScope" "" $INSTDIR
   

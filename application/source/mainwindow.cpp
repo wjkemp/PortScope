@@ -1,6 +1,6 @@
 /*  mainwindow.cpp
  *
- *  Copyright 2012 Willem Kemp.
+ *  Copyright (C) 2012 Willem Kemp <http://www.thenocturnaltree.com>
  *  All rights reserved.
  *
  *  This file is part of PortScope.
@@ -26,7 +26,7 @@
 #include <QMdiSubWindow>
 #include <QMessageBox>
 #include <QFileDialog>
-#include <qmath.h>
+#include <QCloseEvent>
 #include "captureengine/captureengineconfigurationdialog.h"
 
 
@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     : QMainWindow(parent, flags),
     _isConfigured(false),
     _isCapturing(false),
+    _exitWhenCaptureEnds(false),
     _protocolStack(0),
     _captureEngine(0)
 {
@@ -80,6 +81,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     _actCascadeSubWindows = new QAction("Cascade", this);
     connect(_actCascadeSubWindows, SIGNAL(triggered()), _mdiArea, SLOT(cascadeSubWindows()));
 
+    _actAbout = new QAction("About", this);
+    connect(_actAbout, SIGNAL(triggered()), SLOT(showAboutBox()));
+
 
     // Create the toolbar
     _toolBar = new QToolBar();
@@ -114,6 +118,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mWindow->addAction(_actCascadeSubWindows);
     _menuBar->addMenu(mWindow);
 
+    QMenu* mHelp = new QMenu("Help");
+    mHelp->addAction(_actAbout);
+    _menuBar->addMenu(mHelp);
+
     setMenuBar(_menuBar);
 }
 
@@ -122,6 +130,20 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 MainWindow::~MainWindow()
 {
 
+}
+
+
+//-----------------------------------------------------------------------------
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    if (_isCapturing) {
+        _exitWhenCaptureEnds = true;
+        stopCapture();
+        event->ignore();
+
+    } else {
+        event->accept();
+    }
 }
 
 
@@ -252,6 +274,10 @@ void MainWindow::captureStopped()
     _actStopCapture->setEnabled(false);
     _isCapturing = false;
     _currentState->setText("Idle");
+
+    if (_exitWhenCaptureEnds) {
+        close();
+    }
 }
 
 
@@ -260,5 +286,32 @@ void MainWindow::captureError(const QString& error)
 {
     _isCapturing = false;
     QMessageBox::critical(this, "PortScope", error);
+
+    if (_exitWhenCaptureEnds) {
+        close();
+    }
 }
 
+
+
+//-----------------------------------------------------------------------------
+void MainWindow::showAboutBox()
+{
+    QMessageBox::about(this, "About PortScope",
+        "PortScope version " PORTSCOPE_VERSION_STRING "\n"
+        "Copyright (C) 2012 Willem Kemp <http://www.thenocturnaltree.com>\n"
+        "All rights reserved.\n\n"
+
+        "PortScope is free software: you can redistribute it and/or modify\n"
+        "it under the terms of the GNU General Public License as published by\n"
+        "the Free Software Foundation, either version 3 of the License, or\n"
+        "(at your option) any later version.\n\n"
+
+        "PortScope is distributed in the hope that it will be useful,\n"
+        "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+        "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
+        "GNU General Public License for more details.\n\n"
+
+        "You should have received a copy of the GNU General Public License\n"
+        "along with PortScope. If not, see http://www.gnu.org/licenses/.");
+}
