@@ -38,6 +38,8 @@ Analyzer::Analyzer(const QString& name) :
 //-----------------------------------------------------------------------------
 Analyzer::~Analyzer()
 {
+    _displayView->setModel(0);
+    delete _displayModel;
 
 }
 
