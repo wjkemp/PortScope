@@ -164,6 +164,7 @@ Display::Display()
 //-----------------------------------------------------------------------------
 Display::~Display()
 {
+
     delete _formatBuffer;
     for (int i=0; i < _blobs.size(); ++i) {
         delete [] _blobs[i];
