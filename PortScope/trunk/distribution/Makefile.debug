@@ -1,0 +1,20 @@
+all: clean
+		set PATH=%PATH%;%WIN7BASE%\bin\amd64
+		mkdir .\debug\plugins
+		copy ..\application\bin\debug\portscope.exe .\debug
+		copy ..\library\libportscope\lib\debug\libportscope.dll .\debug
+		copy ..\application\configurations\*.xml .\debug
+		copy ..\application\plugins\ps_filter\bin\debug\ps_filter.dll .\debug\plugins
+		copy ..\application\plugins\ps_raw\bin\debug\ps_raw.dll .\debug\plugins
+		copy ..\application\plugins\ps_slip\bin\debug\ps_slip.dll .\debug\plugins
+		mkdir .\debug\drivers
+		mkdir .\debug\drivers\winxp		
+		mkdir .\debug\drivers\win7_32
+		mkdir .\debug\drivers\win7_64	
+		copy ..\driver\source\objchk_wxp_x86\i386\portscope.sys .\debug\drivers\winxp\portscope.sys
+		copy ..\driver\source\objchk_win7_x86\i386\portscope.sys .\debug\drivers\win7_32\portscope.sys
+		copy ..\driver\source\objchk_win7_amd64\amd64\portscope.sys .\debug\drivers\win7_64\portscope.sys
+		SignTool sign /v /s PrivateCertStore /n PortScope(Test) /t http://timestamp.verisign.com/scripts/timestamp.dll .\debug\drivers\win7_64\portscope.sys
+			
+clean:
+		rmdir /Q /S .\debug

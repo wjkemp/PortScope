@@ -81,7 +81,6 @@ void CaptureEngine::run()
         emit started();
 
         do {
-
             
             int flags = 0;
             result = LIBPS_WaitForData(device, &flags);            
