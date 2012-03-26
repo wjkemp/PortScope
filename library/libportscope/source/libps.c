@@ -22,6 +22,8 @@
 #include "libps.h"
 #include <windows.h>
 #include <stdio.h>
+#include <assert.h>
+
 
 #define IOCTL_OPEN_PORT         CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_BUFFERED, FILE_WRITE_DATA)
 
@@ -261,6 +263,7 @@ LIBPS_RESULT LIBPS_WaitForData(LIBPS_HANDLE handle, int* flags)
 
 
     *flags = obj->flags;
+
     return result;
 }
 
@@ -268,6 +271,8 @@ LIBPS_RESULT LIBPS_WaitForData(LIBPS_HANDLE handle, int* flags)
 /*---------------------------------------------------------------------------*/
 LIBPS_RESULT LIBPS_ReadTransmitData(LIBPS_HANDLE handle, void* data, size_t* length)
 {
+
+
     LIBPS_OBJ* obj = (LIBPS_OBJ*)handle;
     LIBPS_RESULT result = LIBPS_ERROR;
 
@@ -280,6 +285,8 @@ LIBPS_RESULT LIBPS_ReadTransmitData(LIBPS_HANDLE handle, void* data, size_t* len
                 &bytesTransferred,
                 FALSE)) {       
 
+            assert(bytesTransferred <= obj->bufferSize);
+
             /* Copy the data */
             memcpy(data, obj->transmitDataBuffer, bytesTransferred);
             *length = bytesTransferred;
@@ -290,6 +297,7 @@ LIBPS_RESULT LIBPS_ReadTransmitData(LIBPS_HANDLE handle, void* data, size_t* len
         }
     }
 
+
     return result;
 }
 
@@ -297,6 +305,7 @@ LIBPS_RESULT LIBPS_ReadTransmitData(LIBPS_HANDLE handle, void* data, size_t* len
 /*---------------------------------------------------------------------------*/
 LIBPS_RESULT LIBPS_ReadReceiveData(LIBPS_HANDLE handle, void* data, size_t* length)
 {
+
     LIBPS_OBJ* obj = (LIBPS_OBJ*)handle;
     LIBPS_RESULT result = LIBPS_ERROR;
 
@@ -310,6 +319,7 @@ LIBPS_RESULT LIBPS_ReadReceiveData(LIBPS_HANDLE handle, void* data, size_t* leng
                 FALSE)) {       
 
             /* Copy the data */
+            assert(bytesTransferred <= obj->bufferSize);
             memcpy(data, obj->receiveDataBuffer, bytesTransferred);
             *length = bytesTransferred;
             obj->flags = 0;
@@ -318,6 +328,7 @@ LIBPS_RESULT LIBPS_ReadReceiveData(LIBPS_HANDLE handle, void* data, size_t* leng
             result = LIBPS_IssueReceiveDataRead(obj);
         }
     }
+
 
     return result;
 }
