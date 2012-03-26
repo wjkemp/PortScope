@@ -25,7 +25,9 @@
 #include <assert.h>
 
 
+/*---------------------------------------------------------------------------*/
 #define IOCTL_OPEN_PORT         CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_BUFFERED, FILE_WRITE_DATA)
+
 
 
 /*---------------------------------------------------------------------------*/
@@ -173,15 +175,30 @@ LIBPS_HANDLE LIBPS_Create(const wchar_t* port, size_t bufferSize)
 void LIBPS_Close(LIBPS_HANDLE handle)
 {
     LIBPS_OBJ* obj = (LIBPS_OBJ*)handle;
+    DWORD bytesTransferred;
+
+
     if (obj) {
-        CloseHandle(obj->transmitDataEvent);
-        CloseHandle(obj->receiveDataEvent);
+
+        /* Wait for the requests to finish */
+        WaitForSingleObject(obj->transmitDataEvent, INFINITE);
+        WaitForSingleObject(obj->receiveDataEvent, INFINITE);
+
+        /* Get the results of the transfers */
+        GetOverlappedResult(obj->transmitDataHandle, &obj->transmitDataTransfer, &bytesTransferred, TRUE);
+        GetOverlappedResult(obj->receiveDataHandle, &obj->receiveDataTransfer, &bytesTransferred, TRUE);
+
+        /* Close the handles */
         CloseHandle(obj->transmitDataHandle);
         CloseHandle(obj->receiveDataHandle);
+        CloseHandle(obj->transmitDataEvent);
+        CloseHandle(obj->receiveDataEvent);
 
+        /* Free the buffers */
         free(obj->transmitDataBuffer);
         free(obj->receiveDataBuffer);
 
+        /* Free the object */
         free(obj);
     }
 }
@@ -263,7 +280,6 @@ LIBPS_RESULT LIBPS_WaitForData(LIBPS_HANDLE handle, int* flags)
 
 
     *flags = obj->flags;
-
     return result;
 }
 
@@ -338,9 +354,7 @@ LIBPS_RESULT LIBPS_ReadReceiveData(LIBPS_HANDLE handle, void* data, size_t* leng
 LIBPS_RESULT LIBPS_IssueTransmitDataRead(LIBPS_OBJ* obj)
 {
     LIBPS_RESULT result = LIBPS_OK;
-
     ReadFile(obj->transmitDataHandle, obj->transmitDataBuffer, obj->bufferSize, 0, &obj->transmitDataTransfer);
-
     return result;
 }
 

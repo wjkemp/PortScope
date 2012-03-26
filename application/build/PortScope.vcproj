@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="PortScope"
 	ProjectGUID="{A5039CF7-EC35-464E-A9C9-76E1E65E7496}"
+	RootNamespace="PortScope"
 	Keyword="Qt4VSv1.0"
 	TargetFrameworkVersion="0"
 	>
@@ -55,9 +56,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="qtmain.lib QtCore4.lib QtGui4.lib QtXml4.lib"
+				AdditionalDependencies="qtmain.lib QtCore4.lib QtGui4.lib QtXml4.lib libportscope.lib"
 				OutputFile="$(OutDir)\$(ProjectName).exe"
-				AdditionalLibraryDirectories="$(QTDIR)\lib"
+				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;..\..\library\libportscope\lib\"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 			/>
