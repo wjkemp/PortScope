@@ -85,6 +85,10 @@ typedef struct _RWENGINE
     KTIMER readTimeoutTimer;
     KTIMER writeTimeoutTimer;
 
+    /* Locks */
+    KSPIN_LOCK readLock;
+    KSPIN_LOCK writeLock;
+
     /* Timeout values */
     RWTIMEOUT readTimeout;
     RWTIMEOUT writeTimeout;

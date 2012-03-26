@@ -26,15 +26,6 @@
 /*---------------------------------------------------------------------------
     Defines
  ----------------------------------------------------------------------------*/
-#pragma alloc_text(PAGE, PortScope_FilterCreate) 
-#pragma alloc_text(PAGE, PortScope_FilterClose) 
-#pragma alloc_text(PAGE, PortScope_FilterRead) 
-#pragma alloc_text(PAGE, PortScope_FilterWrite)
-#pragma alloc_text(PAGE, PortScope_FilterIoControl)
-#pragma alloc_text(PAGE, PortScope_FilterPnp)
-#pragma alloc_text(PAGE, PortScope_FilterPower)
-#pragma alloc_text(PAGE, PortScope_FilterUnknown)
-
 IO_COMPLETION_ROUTINE PortScope_FilterReadComplete;
 IO_COMPLETION_ROUTINE FilterStartCompletionRoutine;
 IO_COMPLETION_ROUTINE FilterDeviceUsageNotificationCompletionRoutine;
@@ -59,8 +50,6 @@ NTSTATUS PortScope_FilterCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     NTSTATUS status = STATUS_SUCCESS;
     PFILTER_DEVICE_EXTENSION deviceExtension = (PFILTER_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
-
-    PAGED_CODE();
     
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Irp);
@@ -88,8 +77,6 @@ NTSTATUS PortScope_FilterClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     NTSTATUS status = STATUS_SUCCESS;
     PFILTER_DEVICE_EXTENSION deviceExtension = (PFILTER_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
-
-    PAGED_CODE();
     
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Irp);
@@ -132,6 +119,7 @@ NTSTATUS PortScope_FilterReadComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVO
         buffer = (PUCHAR)Irp->AssociatedIrp.SystemBuffer;
         length = (ULONG)Irp->IoStatus.Information;
         Buffer_Put(&deviceExtension->ControlDevice->ReadBuffer, buffer, length);
+        RwEngine_SignalReadDataAvailable(&deviceExtension->ControlDevice->ReceiveDataEngine);
     }
 
     if (Irp->PendingReturned) {
@@ -148,8 +136,6 @@ NTSTATUS PortScope_FilterRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     NTSTATUS status = STATUS_SUCCESS;
     PFILTER_DEVICE_EXTENSION deviceExtension = (PFILTER_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION irpStack;
-
-    PAGED_CODE();
             
     DBG2(("PortScope: FilterRead\n"));
 
@@ -186,8 +172,6 @@ NTSTATUS PortScope_FilterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     UCHAR* buffer;
     ULONG length;
 
-    PAGED_CODE();
-    
         
     DBG2(("PortScope: FilterWrite\n"));
 
@@ -206,6 +190,7 @@ NTSTATUS PortScope_FilterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         buffer = (PUCHAR)Irp->AssociatedIrp.SystemBuffer;
         length = irpStack->Parameters.Write.Length;
         Buffer_Put(&deviceExtension->ControlDevice->WriteBuffer, buffer, length);
+        RwEngine_SignalReadDataAvailable(&deviceExtension->ControlDevice->TransmitDataEngine);
     }
 
     /* Forward the IRP */
@@ -223,8 +208,7 @@ NTSTATUS PortScope_FilterIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     NTSTATUS status = STATUS_SUCCESS;
     PFILTER_DEVICE_EXTENSION deviceExtension = (PFILTER_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
-    PAGED_CODE();
-    
+
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Irp);
         
@@ -254,7 +238,6 @@ NTSTATUS PortScope_FilterPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     NTSTATUS status;
     KEVENT event;
 
-    PAGED_CODE();
 
     DBG2(("PortScope: FilterPnp\n"));
 
@@ -479,7 +462,6 @@ NTSTATUS PortScope_FilterPower(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PFILTER_DEVICE_EXTENSION deviceExtension;
     NTSTATUS status;
 
-    PAGED_CODE();
     
     deviceExtension = (PFILTER_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     status = IoAcquireRemoveLock (&deviceExtension->RemoveLock, Irp);
@@ -504,7 +486,6 @@ NTSTATUS PortScope_FilterUnknown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     NTSTATUS status = STATUS_SUCCESS;
     PFILTER_DEVICE_EXTENSION deviceExtension = (PFILTER_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
-    PAGED_CODE();
     
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Irp);
