@@ -52,7 +52,7 @@ Section "Installation Files" SecInstallationFiles
     File "gpl-3.0.txt"
 
     ; Application
-	File /r ".\release"
+	File /r ".\release\"
 
     ; Qt Libraries
 	File $%QTDIR%\bin\QtCore4.dll
