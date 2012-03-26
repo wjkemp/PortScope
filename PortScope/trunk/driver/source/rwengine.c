@@ -89,6 +89,9 @@ VOID RwEngine_Initialize(
     rwengine->writeTimeout.ConstantTimeoutMs = 0xFFFFFFFF;
     rwengine->writeTimeout.MultiplierTimeoutMs = 0;
 
+    /* Locks */
+    KeInitializeSpinLock(&rwengine->readLock);
+    KeInitializeSpinLock(&rwengine->writeLock);
 
     /* Cancel-safe queues */
     CsqInitialize(&rwengine->readQueue, NULL, NULL);
@@ -155,7 +158,9 @@ VOID RwEngine_Disable(PRWENGINE rwengine)
 VOID RwEngine_SetReadTimeout(PRWENGINE rwengine, ULONG constantMs, ULONG multiplierMs)
 {
     KIRQL oldirql;
-    KeRaiseIrql(DISPATCH_LEVEL, &oldirql);
+
+    /* Acquire Read Lock */
+    KeAcquireSpinLock(&rwengine->readLock, &oldirql);
 
     /* Set the timeouts */
     rwengine->readTimeout.ConstantTimeoutMs = constantMs;
@@ -172,8 +177,8 @@ VOID RwEngine_SetReadTimeout(PRWENGINE rwengine, ULONG constantMs, ULONG multipl
         rwengine->readTimeoutStrategy = RWENGINE_TIMEOUT_TIME;
     }
 
-
-    KeLowerIrql(oldirql);
+    /* Release Read Lock */
+    KeReleaseSpinLock(&rwengine->readLock, oldirql);
 }
 
 
@@ -181,7 +186,9 @@ VOID RwEngine_SetReadTimeout(PRWENGINE rwengine, ULONG constantMs, ULONG multipl
 VOID RwEngine_SetWriteTimeout(PRWENGINE rwengine, ULONG constantMs, ULONG multiplierMs)
 {
     KIRQL oldirql;
-    KeRaiseIrql(DISPATCH_LEVEL, &oldirql);
+
+    /* Acquire Write Lock */
+    KeAcquireSpinLock(&rwengine->writeLock, &oldirql);
 
     /* Set the timeouts */
     rwengine->writeTimeout.ConstantTimeoutMs = constantMs;
@@ -199,7 +206,8 @@ VOID RwEngine_SetWriteTimeout(PRWENGINE rwengine, ULONG constantMs, ULONG multip
     }
 
 
-    KeLowerIrql(oldirql);
+    /* Release Write Lock */
+    KeReleaseSpinLock(&rwengine->writeLock, oldirql);
 }
 
 
@@ -263,8 +271,8 @@ NTSTATUS RwEngine_DispatchRead(PRWENGINE rwengine, PIRP Irp)
         return STATUS_SUCCESS;
     }
     
-    /* Raise to dispatch level */
-    KeRaiseIrql(DISPATCH_LEVEL, &oldirql);
+    /* Acquire Read Lock */
+    KeAcquireSpinLock(&rwengine->readLock, &oldirql);
 
 
     /* Politely refuse to process requests if we are disabled */
@@ -272,7 +280,7 @@ NTSTATUS RwEngine_DispatchRead(PRWENGINE rwengine, PIRP Irp)
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        KeLowerIrql(oldirql);
+        KeReleaseSpinLock(&rwengine->readLock, oldirql);
         return STATUS_SUCCESS;
     }
 
@@ -310,7 +318,7 @@ NTSTATUS RwEngine_DispatchRead(PRWENGINE rwengine, PIRP Irp)
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = rwengine->currentReadTransfer.bytesTransferred;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            KeLowerIrql(oldirql);
+            KeReleaseSpinLock(&rwengine->readLock, oldirql);
 
             /* Clear out the transfer object for debugging purposes */
             rwengine->currentReadTransfer.buffer = NULL;
@@ -334,7 +342,7 @@ NTSTATUS RwEngine_DispatchRead(PRWENGINE rwengine, PIRP Irp)
         }
     }
 
-    KeLowerIrql(oldirql);
+    KeReleaseSpinLock(&rwengine->readLock, oldirql);
     return STATUS_PENDING;
 }
 
@@ -352,6 +360,9 @@ VOID RwEngine_ReadDataAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID a
 
     /* Get a pointer to the engine */
     rwengine = (PRWENGINE)context;
+
+    /* Aqcuire the read lock */
+    KeAcquireSpinLockAtDpcLevel(&rwengine->readLock);
 
 
     /* If there is a read pending, handle it */
@@ -405,6 +416,10 @@ VOID RwEngine_ReadDataAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID a
             RwEngine_EnqueueAvailableReadIrps(rwengine);
         }
     }
+
+    /* Release the read lock */
+    KeReleaseSpinLockFromDpcLevel(&rwengine->readLock);
+
 }
 
 
@@ -418,8 +433,13 @@ VOID RwEngine_ReadTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
     UNREFERENCED_PARAMETER(arg1);
     UNREFERENCED_PARAMETER(arg2);
 
+
     /* Get a pointer to the engine */
     rwengine = (PRWENGINE)context;
+
+    /* Aqcuire the read lock */
+    KeAcquireSpinLockAtDpcLevel(&rwengine->readLock);
+
 
     /* If there is a read pending, handle it */
     if (rwengine->readsArePending) {
@@ -455,6 +475,10 @@ VOID RwEngine_ReadTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
     } else {
         KeCancelTimer(&rwengine->readTimeoutTimer);
     }
+
+
+    /* Release the read lock */
+    KeReleaseSpinLockFromDpcLevel(&rwengine->readLock);
 }
 
 
@@ -464,8 +488,8 @@ static VOID RwEngine_OnCurrentReadCancelled(PVOID context, PIRP Irp)
     KIRQL oldirql;
     PRWENGINE rwengine = (PRWENGINE)context;
 
-    /* Synchronize */
-    KeRaiseIrql(DISPATCH_LEVEL, &oldirql);
+    /* Acquire Read Lock */
+    KeAcquireSpinLock(&rwengine->readLock, &oldirql);
 
     /* Cancel the timeout timer that may be associated with this Irp */
     KeCancelTimer(&rwengine->readTimeoutTimer);
@@ -483,7 +507,7 @@ static VOID RwEngine_OnCurrentReadCancelled(PVOID context, PIRP Irp)
     /* Push any requests that may be in the waiting queue */
     RwEngine_EnqueueAvailableReadIrps(rwengine);
 
-    KeLowerIrql(oldirql);
+    KeReleaseSpinLock(&rwengine->readLock, oldirql);
 }
 
 
@@ -591,9 +615,10 @@ NTSTATUS RwEngine_DispatchWrite(PRWENGINE rwengine, PIRP Irp)
         return STATUS_SUCCESS;
     }
     
-    /* Raise to dispatch level */
     status = STATUS_SUCCESS;
-    KeRaiseIrql(DISPATCH_LEVEL, &oldirql);
+
+    /* Acquire Write Lock */
+    KeAcquireSpinLock(&rwengine->writeLock, &oldirql);
 
 
     /* Politely refuse to process requests if we are disabled */
@@ -601,7 +626,7 @@ NTSTATUS RwEngine_DispatchWrite(PRWENGINE rwengine, PIRP Irp)
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        KeLowerIrql(oldirql);
+        KeReleaseSpinLock(&rwengine->writeLock, oldirql);
         return STATUS_SUCCESS;
     }
 
@@ -667,7 +692,7 @@ NTSTATUS RwEngine_DispatchWrite(PRWENGINE rwengine, PIRP Irp)
     }
 
     
-    KeLowerIrql(oldirql);
+    KeReleaseSpinLock(&rwengine->writeLock, oldirql);
     return status;
 }
 
@@ -688,6 +713,8 @@ VOID RwEngine_WriteBufferAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOI
     /* Get a pointer to the engine */
     rwengine = (PRWENGINE)context;
 
+    /* Acquire Write Lock */
+    KeAcquireSpinLockAtDpcLevel(&rwengine->writeLock);
 
     /* If there is a write pending, handle it */
     if (rwengine->writesArePending) {
@@ -741,6 +768,9 @@ VOID RwEngine_WriteBufferAvailableDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOI
             RwEngine_EnqueueAvailableWriteIrps(rwengine);
         }
     }
+
+    /* Release Write Lock */
+    KeReleaseSpinLockFromDpcLevel(&rwengine->writeLock);
 }
 
 
@@ -758,6 +788,9 @@ VOID RwEngine_WriteTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
 
     /* Get a pointer to the engine */
     rwengine = (PRWENGINE)context;
+
+    /* Acquire Write Lock */
+    KeAcquireSpinLockAtDpcLevel(&rwengine->writeLock);
 
     /* If there is a write pending, handle it */
     if (rwengine->writesArePending) {
@@ -793,7 +826,11 @@ VOID RwEngine_WriteTimeoutDPC(PKDPC Dpc, PVOID context, PVOID arg1, PVOID arg2)
     } else {
         KeCancelTimer(&rwengine->writeTimeoutTimer);
     }
+
+    /* Release Write Lock */
+    KeReleaseSpinLockFromDpcLevel(&rwengine->writeLock);
 }
+
 
 /*----------------------------------------------------------------------------*/
 static VOID RwEngine_OnCurrentWriteCancelled(PVOID context, PIRP Irp)
@@ -801,8 +838,8 @@ static VOID RwEngine_OnCurrentWriteCancelled(PVOID context, PIRP Irp)
     KIRQL oldirql;
     PRWENGINE rwengine = (PRWENGINE)context;
 
-    /* Synchronize */
-    KeRaiseIrql(DISPATCH_LEVEL, &oldirql);
+    /* Acquire Write Lock */
+    KeAcquireSpinLock(&rwengine->writeLock, &oldirql);
 
     /* Cancel the timeout timer that may be associated with this Irp */
     KeCancelTimer(&rwengine->writeTimeoutTimer);
@@ -820,7 +857,8 @@ static VOID RwEngine_OnCurrentWriteCancelled(PVOID context, PIRP Irp)
     /* Push any requests that may be in the waiting queue */
     RwEngine_EnqueueAvailableWriteIrps(rwengine);
 
-    KeLowerIrql(oldirql);   
+    /* Release Write Lock */
+    KeReleaseSpinLock(&rwengine->writeLock, oldirql);
 }
 
 
@@ -910,8 +948,8 @@ VOID RwEngine_FlushQueuedAndPendingIrps(PRWENGINE rwengine)
     PIRP Irp;
 
 
-    /* Raise the irql to synchronize with any DPCs */
-    KeRaiseIrql(DISPATCH_LEVEL, &oldirql);
+    /* Acquire Write Lock */
+    KeAcquireSpinLock(&rwengine->writeLock, &oldirql);
 
 
     /* Complete parked write transfer */
@@ -946,6 +984,12 @@ VOID RwEngine_FlushQueuedAndPendingIrps(PRWENGINE rwengine)
     /* Indicate that no writes are pending */
     rwengine->writesArePending = FALSE;
 
+    /* Release Write Lock */
+    KeReleaseSpinLock(&rwengine->writeLock, oldirql);
+
+
+    /* Acquire Read Lock */
+    KeAcquireSpinLock(&rwengine->readLock, &oldirql);
 
 
     /* Complete parked read transfer */
@@ -977,6 +1021,6 @@ VOID RwEngine_FlushQueuedAndPendingIrps(PRWENGINE rwengine)
     }
 
 
-    /* Lower the irql to previous level */
-    KeLowerIrql(oldirql);
+    /* Release Read Lock */
+    KeReleaseSpinLock(&rwengine->readLock, oldirql);
 }
