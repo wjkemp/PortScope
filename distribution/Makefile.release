@@ -15,7 +15,8 @@ all: clean
 		copy ..\driver\source\objfre_win7_x86\i386\portscope.sys .\release\drivers\win7_32\portscope.sys
 		copy ..\driver\source\objfre_win7_amd64\amd64\portscope.sys .\release\drivers\win7_64\portscope.sys
 		SignTool sign /v /s PrivateCertStore /n PortScope(Test) /t http://timestamp.verisign.com/scripts/timestamp.dll .\release\drivers\win7_64\portscope.sys
+		makensis installer.nsi
 			
 clean:
-		rmdir /Q /S .\release
+		if exist .\release rmdir /Q /S .\release
 	

@@ -17,4 +17,4 @@ all: clean
 		SignTool sign /v /s PrivateCertStore /n PortScope(Test) /t http://timestamp.verisign.com/scripts/timestamp.dll .\debug\drivers\win7_64\portscope.sys
 			
 clean:
-		rmdir /Q /S .\debug
+		if exist .\debug rmdir /Q /S .\debug
