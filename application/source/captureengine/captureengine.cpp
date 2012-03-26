@@ -82,8 +82,9 @@ void CaptureEngine::run()
 
         do {
 
+            
             int flags = 0;
-            result = LIBPS_WaitForData(device, &flags);
+            result = LIBPS_WaitForData(device, &flags);            
             if (result == LIBPS_OK) {
 
                 if (flags & LIBPS_TRANSMIT_DATA_AVAILABLE) {
@@ -98,6 +99,7 @@ void CaptureEngine::run()
                     _protocolStack->root()->analyzer()->processData(captureBuffer, length, ProtocolAnalyzer::ReceiveData);
                 }
             }
+            
 
             _lock.lock();
             stop = _stop;

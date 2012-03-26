@@ -168,9 +168,9 @@ void MainWindow::openConfiguration()
             _protocolStackView->setProtocolStack(_protocolStack);
 
             // Connect capture engine signals
-            connect(_captureEngine, SIGNAL(started()), SLOT(captureStarted()));
-            connect(_captureEngine, SIGNAL(stopped()), SLOT(captureStopped()));
-            connect(_captureEngine, SIGNAL(error(const QString&)), SLOT(captureError(const QString&)));
+            connect(_captureEngine, SIGNAL(started()), SLOT(captureStarted()), Qt::QueuedConnection);
+            connect(_captureEngine, SIGNAL(stopped()), SLOT(captureStopped()), Qt::QueuedConnection);
+            connect(_captureEngine, SIGNAL(error(const QString&)), SLOT(captureError(const QString&)), Qt::QueuedConnection);
 
             // Add display widgets to the widget stack
             QList<QWidget*> displayWidgets(_protocolStack->getDisplayWidgets());
