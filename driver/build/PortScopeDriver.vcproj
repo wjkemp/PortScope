@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="PortScope"
+	Name="PortScopeDriver"
 	ProjectGUID="{9F80A7BF-42C7-479E-BE0B-0BC76583C800}"
 	Keyword="MakeFileProj"
 	TargetFrameworkVersion="196613"
