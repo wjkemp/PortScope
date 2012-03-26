@@ -1,0 +1,22 @@
+all: clean
+		set PATH=%PATH%;%WIN7BASE%\bin\amd64
+		mkdir .\release\plugins
+		copy ..\application\bin\release\portscope.exe .\release
+		copy ..\library\libportscope\lib\libportscope.dll .\release
+		copy ..\application\configurations\*.xml .\release
+		copy ..\application\plugins\ps_filter\bin\release\ps_filter.dll .\release\plugins
+		copy ..\application\plugins\ps_raw\bin\release\ps_raw.dll .\release\plugins
+		copy ..\application\plugins\ps_slip\bin\release\ps_slip.dll .\release\plugins
+		mkdir .\release\drivers
+		mkdir .\release\drivers\winxp		
+		mkdir .\release\drivers\win7_32
+		mkdir .\release\drivers\win7_64	
+		copy ..\driver\source\objfre_wxp_x86\i386\portscope.sys .\release\drivers\winxp\portscope.sys
+		copy ..\driver\source\objfre_win7_x86\i386\portscope.sys .\release\drivers\win7_32\portscope.sys
+		copy ..\driver\source\objfre_win7_amd64\amd64\portscope.sys .\release\drivers\win7_64\portscope.sys
+		SignTool sign /v /s PrivateCertStore /n PortScope(Test) /t http://timestamp.verisign.com/scripts/timestamp.dll .\release\drivers\win7_64\portscope.sys
+		makensis installer.nsi
+			
+clean:
+		if exist .\release rmdir /Q /S .\release
+	

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/MainWindow">
+        <file>icons/open.png</file>
+        <file>icons/startcapture.png</file>
+        <file>icons/stopcapture.png</file>
+    </qresource>
+</RCC>
