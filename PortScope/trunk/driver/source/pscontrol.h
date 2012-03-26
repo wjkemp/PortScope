@@ -31,14 +31,17 @@
     Module Definitions
  -----------------------------------------------------------------------------*/
 
+#define PORTSCOPE_BUFFER_SIZE 16384
+
+
 typedef struct
 {
     COMMON_DEVICE_DATA Common;
     BUFFER WriteBuffer;
-    unsigned char WriteBufferData[1024];
+    unsigned char WriteBufferData[PORTSCOPE_BUFFER_SIZE];
 
     BUFFER ReadBuffer;
-    unsigned char ReadBufferData[1024];
+    unsigned char ReadBufferData[PORTSCOPE_BUFFER_SIZE];
 
     ULONG TransmitDataTag;
     ULONG ReceiveDataTag;
