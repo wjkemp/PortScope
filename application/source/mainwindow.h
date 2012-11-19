@@ -24,16 +24,21 @@
 
 #include <QtGui/QMainWindow>
 #include <QDockWidget>
-#include <QMdiArea>
 #include <QMenuBar>
 #include <QToolBar>
 #include <QStatusBar>
 #include <QLabel>
-#include "protocolstack/protocolstack.h"
-#include "protocolstack/protocolstackview.h"
-#include "protocolstack/protocolstackmodel.h"
+#include <QSplitter>
 
 #include "captureengine/captureengine.h"
+#include "packetdatabase/parserconfiguration.h"
+#include "packetdatabase/packetdatabase.h"
+#include "views/packetlistmodel.h"
+#include "views/packetlistview.h"
+#include "views/packetlayermodel.h"
+#include "views/packetlayerview.h"
+#include "views/packetdataview.h"
+
 
 
 class MainWindow : public QMainWindow
@@ -53,7 +58,7 @@ protected slots:
     void closeConfiguration();
     void startCapture();
     void stopCapture();
-    void showWidget(QWidget* widget);
+    void clearCapture();
 
     // Capture engine
     void captureStarted();
@@ -62,20 +67,25 @@ protected slots:
 
     void showAboutBox();
 
-private:
+    void packetSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
+    void packetFieldSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
 
-    // Static objects
-    ProtocolStackView* _protocolStackView;
-    QDockWidget* _protocolStackDockWidget;
-    QMdiArea* _mdiArea;
-    QMap<QWidget*, QMdiSubWindow*> _mdiSubWindows;
+private:
 
     // Configuration-created objects
     bool _isConfigured;
     bool _isCapturing;
     bool _exitWhenCaptureEnds;
-    ProtocolStack* _protocolStack;
     CaptureEngine* _captureEngine;
+    ParserConfiguration* _parserConfiguration;
+    PacketDatabase* _packetDatabase;
+
+    // Models and Views
+    PacketListModel* _packetListModel;
+    PacketListView* _packetListView;
+    PacketLayerView* _packetLayerView;
+    PacketDataView* _packetDataView;
+    QSplitter* _splitter;
 
 
     // Menu and toolbars
@@ -89,9 +99,7 @@ private:
     QAction* _actCloseConfiguration;
     QAction* _actStartCapture;
     QAction* _actStopCapture;
-
-    QAction* _actTileSubWindows;
-    QAction* _actCascadeSubWindows;
+    QAction* _actClearCapture;
 
     QAction* _actAbout;
 

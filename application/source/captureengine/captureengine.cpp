@@ -22,14 +22,17 @@
 #include "captureengine.h"
 #include <QMutexLocker>
 #include <libps.h>
+#include <QDateTime>
 
 
 //-----------------------------------------------------------------------------
-CaptureEngine::CaptureEngine(ProtocolStack* protocolStack) :
-    _protocolStack(protocolStack),
+CaptureEngine::CaptureEngine(PacketDatabase* packetDatabase, PacketParser* packetParser, std::list<FramingProtocolParser*> framingProtocolParsers) :
+    _packetParser(packetParser),
+    _packetDatabase(packetDatabase),
+    _framingProtocolParsers(framingProtocolParsers),
     _stop(false)
 {
-
+    connect(this, SIGNAL(packetReceived(Packet*)), _packetDatabase, SLOT(addPacket(Packet*)), Qt::QueuedConnection);
 }
 
 
@@ -85,17 +88,18 @@ void CaptureEngine::run()
             int flags = 0;
             result = LIBPS_WaitForData(device, &flags);            
             if (result == LIBPS_OK) {
+                
 
                 if (flags & LIBPS_TRANSMIT_DATA_AVAILABLE) {
                     size_t length = captureBufferSize;
                     result = LIBPS_ReadTransmitData(device, captureBuffer, &length);
-                    _protocolStack->root()->analyzer()->processData(captureBuffer, length, ProtocolAnalyzer::TransmitData);
+                    process(captureBuffer, length, PF_TX);
                 }
 
                 if (flags & LIBPS_RECEIVE_DATA_AVAILABLE) {
                     size_t length = captureBufferSize;
                     result = LIBPS_ReadReceiveData(device, captureBuffer, &length);
-                    _protocolStack->root()->analyzer()->processData(captureBuffer, length, ProtocolAnalyzer::ReceiveData);
+                    process(captureBuffer, length, PF_RX);
                 }
             }
             
@@ -122,3 +126,25 @@ void CaptureEngine::run()
 
 }
 
+
+//-----------------------------------------------------------------------------
+void CaptureEngine::process(const unsigned char* data, size_t length, PacketFlags flags)
+{
+    QDateTime time(QDateTime::currentDateTime());
+
+    // Run through the list of framing protocol parsers
+    std::list<FramingProtocolParser*>::const_iterator i;
+    for (i = _framingProtocolParsers.begin(); i != _framingProtocolParsers.end(); ++i) {
+        FramingProtocolParser* framingProtocolParser(*i);
+        if (framingProtocolParser->supportedFlags() & flags) {
+            std::list<Packet*> packets = framingProtocolParser->parse(data, length);
+            std::list<Packet*>::const_iterator j;
+            for (j = packets.begin(); j != packets.end(); ++j) {
+                Packet* packet(*j);
+                packet->setInfo(_packetParser->parseInfo(packet));
+                packet->setTimestamp(time.toMSecsSinceEpoch());
+                emit packetReceived(packet);
+            }
+        }
+    }
+}
