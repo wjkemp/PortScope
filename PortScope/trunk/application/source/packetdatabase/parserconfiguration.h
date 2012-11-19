@@ -1,4 +1,4 @@
-/*  captureengine.h
+/*  parserconfiguration.h
  *
  *  Copyright (C) 2012 Willem Kemp <http://www.thenocturnaltree.com>
  *  All rights reserved.
@@ -19,45 +19,26 @@
  *  along with PortScope. If not, see http://www.gnu.org/licenses/.
  *
  */
-#ifndef __CAPTUREENGINE_H__
-#define __CAPTUREENGINE_H__
+#ifndef __PARSERCONFIGURATION_H__
+#define __PARSERCONFIGURATION_H__
 
-#include <QThread>
-#include <QMutex>
-#include "captureengineconfiguration.h"
-#include "packetdatabase/packetdatabase.h"
-#include "packetdatabase/packetparser.h"
+#include "packetparser.h"
+#include "framingprotocolparser.h"
 
 
-class CaptureEngine : public QThread
+class ParserConfiguration
 {
-    Q_OBJECT
 
 public:
-    CaptureEngine(PacketDatabase* packetDatabase, PacketParser* packetParser, std::list<FramingProtocolParser*> framingProtocolParsers);
-    ~CaptureEngine();
-
-    bool start(const CaptureEngineConfiguration& config);
-    void stop();
-
-signals:
-    void started();
-    void stopped();
-    void error(const QString& error);
-    void packetReceived(Packet* packet);
-
-protected:
-    void run();
-    void process(const unsigned char* data, size_t length, PacketFlags flags);
+    ParserConfiguration(PacketParser* packetParser, std::list<FramingProtocolParser*> framingProtocolParsers);
+    ~ParserConfiguration();
+    PacketParser* packetParser() const { return _packetParser; }
+    std::list<FramingProtocolParser*> framingProtocolParsers() const { return _framingProtocolParsers; }
 
 private:
-    PacketDatabase* _packetDatabase;
     PacketParser* _packetParser;
     std::list<FramingProtocolParser*> _framingProtocolParsers;
-    CaptureEngineConfiguration _config;
-    QMutex _lock;
-    bool _stop;
-
 };
+
 
 #endif

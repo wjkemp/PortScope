@@ -223,14 +223,34 @@
 				</FileConfiguration>
 			</File>
 			<Filter
-				Name="protocolstack"
+				Name="packetdatabase"
 				>
 				<File
-					RelativePath="..\source\protocolstack\protocolstack.cpp"
+					RelativePath="..\source\packetdatabase\framingprotocolparser.h"
 					>
 				</File>
 				<File
-					RelativePath="..\source\protocolstack\protocolstack.h"
+					RelativePath="..\source\packetdatabase\framingprotocolparserfactory.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\framingprotocolparserfactory.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packet.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packet.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetdatabase.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetdatabase.h"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -238,7 +258,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Moc&apos;ing $(InputFileName)..."
-							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\protocolstack\protocolstack.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\packetdatabase\packetdatabase.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
 							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
 							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 						/>
@@ -249,36 +269,24 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Moc&apos;ing $(InputFileName)..."
-							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\protocolstack\protocolstack.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\packetdatabase\packetdatabase.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
 							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
 							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 						/>
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\source\protocolstack\protocolstackitem.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\source\protocolstack\protocolstackitem.h"
-					>
-				</File>
-				<File
-					RelativePath="..\source\protocolstack\protocolstackmodel.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\source\protocolstack\protocolstackmodel.h"
+					RelativePath="..\source\packetdatabase\packetdatabaselistener.h"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
 						>
 						<Tool
 							Name="VCCustomBuildTool"
-							Description="Moc&apos;ing $(InputFileName)..."
-							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\protocolstack\protocolstackmodel.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
-							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
-							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+							Description=""
+							CommandLine=""
+							AdditionalDependencies=""
+							Outputs=""
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -286,29 +294,89 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
-							Description="Moc&apos;ing $(InputFileName)..."
-							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\protocolstack\protocolstackmodel.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
-							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
-							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+							Description=""
+							CommandLine=""
+							AdditionalDependencies=""
+							Outputs=""
 						/>
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\source\protocolstack\protocolstackview.cpp"
+					RelativePath="..\source\packetdatabase\packetfieldinfo.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\source\protocolstack\protocolstackview.h"
+					RelativePath="..\source\packetdatabase\packetfieldinfo.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetflags.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetflags.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetinfo.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetinfo.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetlayerinfo.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetlayerinfo.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetlayerparser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetlayerparserfactory.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetlayerparserfactory.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetparser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\packetparser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\parserconfiguration.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\parserconfiguration.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\parserconfigurationloader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\packetdatabase\parserconfigurationloader.h"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
 						>
 						<Tool
 							Name="VCCustomBuildTool"
-							Description="Moc&apos;ing $(InputFileName)..."
-							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\protocolstack\protocolstackview.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
-							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
-							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+							Description=""
+							CommandLine=""
+							AdditionalDependencies=""
+							Outputs=""
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -316,21 +384,45 @@
 						>
 						<Tool
 							Name="VCCustomBuildTool"
-							Description="Moc&apos;ing $(InputFileName)..."
-							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\protocolstack\protocolstackview.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
-							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
-							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+							Description=""
+							CommandLine=""
+							AdditionalDependencies=""
+							Outputs=""
 						/>
 					</FileConfiguration>
 				</File>
-				<File
-					RelativePath="..\source\protocolstack\rootdispatcher.cpp"
+				<Filter
+					Name="framingprotocolparsers"
 					>
-				</File>
-				<File
-					RelativePath="..\source\protocolstack\rootdispatcher.h"
+					<File
+						RelativePath="..\source\packetdatabase\framingprotocolparsers\fpp_slip.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\packetdatabase\framingprotocolparsers\fpp_slip.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="packetlayerparsers"
 					>
-				</File>
+					<File
+						RelativePath="..\source\packetdatabase\packetlayerparsers\plp_esploader.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\packetdatabase\packetlayerparsers\plp_esploader.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\packetdatabase\packetlayerparsers\plp_idr.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\packetdatabase\packetlayerparsers\plp_idr.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="captureengine"
@@ -430,6 +522,160 @@
 					</FileConfiguration>
 				</File>
 			</Filter>
+			<Filter
+				Name="views"
+				>
+				<File
+					RelativePath="..\source\views\packetdataview.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\views\packetdataview.h"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB &quot;-I.&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB &quot;-I.&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\source\views\packetlayermodel.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\views\packetlayermodel.h"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\views\packetlayermodel.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\views\packetlayermodel.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\source\views\packetlayerview.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\views\packetlayerview.h"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\views\packetlayerview.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\views\packetlayerview.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\source\views\packetlistmodel.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\views\packetlistmodel.h"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\views\packetlistmodel.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\views\packetlistmodel.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\source\views\packetlistview.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\views\packetlistview.h"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\views\packetlistview.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+							Description="Moc&apos;ing $(InputFileName)..."
+							CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DQT_XML_LIB  &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\qtmain&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I$(QTDIR)\include\QtXml&quot; &quot;-I.&quot; &quot;-I.\..\source&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\library\libportscope\include&quot; &quot;..\source\views\packetlistview.h&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;&#x0D;&#x0A;"
+							AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+							Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -450,6 +696,26 @@
 			ParseFiles="false"
 			>
 			<File
+				RelativePath="..\resources\icons\clear.png"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\resources\mainwindow.qrc"
 				>
 				<FileConfiguration
@@ -459,7 +725,7 @@
 						Name="VCCustomBuildTool"
 						Description="Rcc&apos;ing $(InputFileName)..."
 						CommandLine="&quot;$(QTDIR)\bin\rcc.exe&quot; -name &quot;$(InputName)&quot; -no-compress &quot;$(InputPath)&quot; -o .\GeneratedFiles\qrc_$(InputName).cpp&#x0D;&#x0A;"
-						AdditionalDependencies="$(InputPath);..\resources\icons\open.png;..\resources\icons\startcapture.png;..\resources\icons\stopcapture.png"
+						AdditionalDependencies="$(InputPath);..\resources\icons\open.png;..\resources\icons\startcapture.png;..\resources\icons\stopcapture.png;..\resources\icons\clear.png"
 						Outputs=".\GeneratedFiles\qrc_$(InputName).cpp"
 					/>
 				</FileConfiguration>
@@ -470,7 +736,7 @@
 						Name="VCCustomBuildTool"
 						Description="Rcc&apos;ing $(InputFileName)..."
 						CommandLine="&quot;$(QTDIR)\bin\rcc.exe&quot; -name &quot;$(InputName)&quot; -no-compress &quot;$(InputPath)&quot; -o .\GeneratedFiles\qrc_$(InputName).cpp&#x0D;&#x0A;"
-						AdditionalDependencies="$(InputPath);..\resources\icons\open.png;..\resources\icons\startcapture.png;..\resources\icons\stopcapture.png"
+						AdditionalDependencies="$(InputPath);..\resources\icons\open.png;..\resources\icons\startcapture.png;..\resources\icons\stopcapture.png;..\resources\icons\clear.png"
 						Outputs=".\GeneratedFiles\qrc_$(InputName).cpp"
 					/>
 				</FileConfiguration>
@@ -608,7 +874,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\GeneratedFiles\Release\moc_protocolstack.cpp"
+					RelativePath=".\GeneratedFiles\Release\moc_packetdatabase.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -620,7 +886,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\GeneratedFiles\Release\moc_protocolstackmodel.cpp"
+					RelativePath=".\GeneratedFiles\Release\moc_packetdataview.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -632,7 +898,43 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\GeneratedFiles\Release\moc_protocolstackview.cpp"
+					RelativePath=".\GeneratedFiles\Release\moc_packetlayermodel.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Release\moc_packetlayerview.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Release\moc_packetlistmodel.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Release\moc_packetlistview.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -686,7 +988,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\GeneratedFiles\Debug\moc_protocolstack.cpp"
+					RelativePath=".\GeneratedFiles\Debug\moc_packetdatabase.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -698,7 +1000,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\GeneratedFiles\Debug\moc_protocolstackmodel.cpp"
+					RelativePath=".\GeneratedFiles\Debug\moc_packetdataview.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -710,7 +1012,43 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\GeneratedFiles\Debug\moc_protocolstackview.cpp"
+					RelativePath=".\GeneratedFiles\Debug\moc_packetlayermodel.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_packetlayerview.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_packetlistmodel.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_packetlistview.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"

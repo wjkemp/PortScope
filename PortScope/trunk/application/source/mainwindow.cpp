@@ -28,6 +28,7 @@
 #include <QFileDialog>
 #include <QCloseEvent>
 #include "captureengine/captureengineconfigurationdialog.h"
+#include "packetdatabase/parserconfigurationloader.h"
 
 
 //-----------------------------------------------------------------------------
@@ -36,8 +37,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     _isConfigured(false),
     _isCapturing(false),
     _exitWhenCaptureEnds(false),
-    _protocolStack(0),
-    _captureEngine(0)
+    _captureEngine(0),
+    _parserConfiguration(0),
+    _packetDatabase(0)
 {
 
     setWindowTitle(
@@ -46,17 +48,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             .arg(PORTSCOPE_VERSION_MINOR)
             .arg(PORTSCOPE_VERSION_BUILD));
 
-
-    // Create MDI Area
-    _mdiArea = new QMdiArea();
-    setCentralWidget(_mdiArea);
-
-    // Create the protocol stack
-    _protocolStackView = new ProtocolStackView();
-
-    _protocolStackDockWidget = new QDockWidget("Protocol Stack");
-    _protocolStackDockWidget->setWidget(_protocolStackView);
-    addDockWidget(Qt::BottomDockWidgetArea, _protocolStackDockWidget);
 
 
     // Create the actions
@@ -75,11 +66,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     _actStopCapture->setEnabled(false);
     connect(_actStopCapture, SIGNAL(triggered()), SLOT(stopCapture()));
 
-    _actTileSubWindows = new QAction("Tile", this);
-    connect(_actTileSubWindows, SIGNAL(triggered()), _mdiArea, SLOT(tileSubWindows()));
+    _actClearCapture = new QAction(QIcon(":/MainWindow/icons/clear.png"), "Clear Capture", this);
+    _actClearCapture->setEnabled(true);
+    connect(_actClearCapture, SIGNAL(triggered()), SLOT(clearCapture()));
 
-    _actCascadeSubWindows = new QAction("Cascade", this);
-    connect(_actCascadeSubWindows, SIGNAL(triggered()), _mdiArea, SLOT(cascadeSubWindows()));
 
     _actAbout = new QAction("About", this);
     connect(_actAbout, SIGNAL(triggered()), SLOT(showAboutBox()));
@@ -91,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     _toolBar->addSeparator();
     _toolBar->addAction(_actStartCapture);
     _toolBar->addAction(_actStopCapture);
+    _toolBar->addAction(_actClearCapture);
     addToolBar(_toolBar);
 
     // Create the status bar
@@ -111,18 +102,41 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     QMenu* mCapture = new QMenu("Capture");
     mCapture->addAction(_actStartCapture);
     mCapture->addAction(_actStopCapture);
+    mCapture->addAction(_actClearCapture);
     _menuBar->addMenu(mCapture);
-
-    QMenu* mWindow = new QMenu("Window");
-    mWindow->addAction(_actTileSubWindows);
-    mWindow->addAction(_actCascadeSubWindows);
-    _menuBar->addMenu(mWindow);
 
     QMenu* mHelp = new QMenu("Help");
     mHelp->addAction(_actAbout);
     _menuBar->addMenu(mHelp);
 
     setMenuBar(_menuBar);
+
+
+
+    // Create the main widgets
+    _packetDatabase = new PacketDatabase();
+    _packetListModel = new PacketListModel(_packetDatabase);
+    _packetListView = new PacketListView();
+    _packetListView->setModel(_packetListModel);
+    _packetLayerView = new PacketLayerView();
+    _packetDataView = new PacketDataView();
+
+
+    _packetDatabase->addListener(_packetListView);
+
+
+    // Create the splitter
+    _splitter = new QSplitter(Qt::Vertical);
+    _splitter->setHandleWidth(3);
+    _splitter->addWidget(_packetListView);
+    _splitter->addWidget(_packetLayerView);
+    _splitter->addWidget(_packetDataView);
+
+    setCentralWidget(_splitter);
+
+
+    connect(_packetListView->selectionModel(), SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), SLOT(packetSelectionChanged(const QModelIndex&, const QModelIndex&)));
+
 }
 
 
@@ -163,32 +177,14 @@ void MainWindow::openConfiguration()
         // Create a new protocol stack
         try {
 
-            _protocolStack = new ProtocolStack(fileName);
-            _captureEngine = new CaptureEngine(_protocolStack);
-            _protocolStackView->setProtocolStack(_protocolStack);
+            ParserConfigurationLoader loader;
+            _parserConfiguration = loader.load(fileName);
+            _captureEngine = new CaptureEngine(_packetDatabase, _parserConfiguration->packetParser(), _parserConfiguration->framingProtocolParsers());
 
             // Connect capture engine signals
             connect(_captureEngine, SIGNAL(started()), SLOT(captureStarted()), Qt::QueuedConnection);
             connect(_captureEngine, SIGNAL(stopped()), SLOT(captureStopped()), Qt::QueuedConnection);
             connect(_captureEngine, SIGNAL(error(const QString&)), SLOT(captureError(const QString&)), Qt::QueuedConnection);
-
-            // Add display widgets to the widget stack
-            QList<QWidget*> displayWidgets(_protocolStack->getDisplayWidgets());
-            QWidget* displayWidget;
-            foreach(displayWidget, displayWidgets) {
-                QMdiSubWindow* subWindow = new QMdiSubWindow();
-                subWindow->setWidget(displayWidget);
-                _mdiArea->addSubWindow(subWindow);
-                _mdiSubWindows[displayWidget] = subWindow;
-                subWindow->show();
-            }
-
-            _mdiArea->tileSubWindows();
-
-            connect(
-                _protocolStackView,
-                SIGNAL(displayWidgetChanged(QWidget*)),
-                SLOT(showWidget(QWidget*)));
 
             _isConfigured = true;
             _actStartCapture->setEnabled(true);
@@ -204,20 +200,9 @@ void MainWindow::openConfiguration()
 void MainWindow::closeConfiguration()
 {
 
-    /* Delete all the MDI subwindows */
-    QMapIterator<QWidget*, QMdiSubWindow*> i(_mdiSubWindows);
-    while (i.hasNext()) {
-        i.next();
-        delete i.value();
-    }
-    _mdiSubWindows.clear();
-
-    /* Destroy the protocol stack */
-    _protocolStackView->setProtocolStack(0);
-    delete _protocolStack;
+    // Destroy the protocol stack
+    delete _parserConfiguration;
     delete _captureEngine;
-
-    _protocolStack = 0;
     _captureEngine = 0;
 }
 
@@ -233,7 +218,6 @@ void MainWindow::startCapture()
             _currentState->setText(QString("Capturing on %1").arg(dialog.getConfiguration().portName()));
         }
     }
-
 }
 
 
@@ -247,13 +231,9 @@ void MainWindow::stopCapture()
 
 
 //-----------------------------------------------------------------------------
-void MainWindow::showWidget(QWidget* widget)
+void MainWindow::clearCapture()
 {
-    if (widget->isVisible()) {
-    } else {
-        widget->show();
-    }
-    _mdiArea->setActiveSubWindow(_mdiSubWindows[widget]);
+    _packetDatabase->clear();
 }
 
 
@@ -290,6 +270,58 @@ void MainWindow::captureError(const QString& error)
     if (_exitWhenCaptureEnds) {
         close();
     }
+}
+
+
+//-----------------------------------------------------------------------------
+void MainWindow::packetSelectionChanged(const QModelIndex& current, const QModelIndex& previous)
+{
+    if (current.isValid()) {
+        Packet* packet = _packetDatabase->packetAt(current.row());
+        if (packet) {
+
+            // Parse the packet if it is not parsed
+            if (!packet->parsed()) {
+                PacketParser* parser = _parserConfiguration->packetParser();
+                parser->parseDetail(packet);
+            }
+
+            // Set the new model
+            PacketLayerModel* model = new PacketLayerModel(packet);
+            _packetLayerView->setModel(model);
+            connect(
+                _packetLayerView->selectionModel(),
+                SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
+                SLOT(packetFieldSelectionChanged(const QModelIndex&, const QModelIndex&)));
+
+
+            // Set the data view
+            _packetDataView->clear();
+            _packetDataView->addData(packet->data(), packet->length());
+            _packetDataView->setHighlightField(0, 0);
+            _packetDataView->update();
+        }
+
+    } else {
+        _packetLayerView->setModel(0);
+        _packetDataView->clear();
+        _packetDataView->setHighlightField(0, 0);
+        _packetDataView->update();        
+    }
+}
+
+
+//-----------------------------------------------------------------------------
+void MainWindow::packetFieldSelectionChanged(const QModelIndex& current, const QModelIndex& previous)
+{
+    PacketLayerModel* model = static_cast<PacketLayerModel*>(_packetLayerView->model());
+    if (model) {
+        PacketInfo* info = model->getInfoAt(current);
+        if (info) {
+            _packetDataView->setHighlightField(info->offset(), info->length());
+        }
+    }
+
 }
 
 

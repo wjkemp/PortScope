@@ -3,5 +3,6 @@
         <file>icons/open.png</file>
         <file>icons/startcapture.png</file>
         <file>icons/stopcapture.png</file>
+        <file>icons/clear.png</file>
     </qresource>
 </RCC>
